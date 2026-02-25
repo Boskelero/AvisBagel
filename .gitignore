@@ -1,0 +1,138 @@
+# =========================
+
+# Python
+
+# =========================
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =========================
+
+# Virtual environments
+
+# =========================
+
+env/
+venv/
+.venv/
+ENV/
+
+# =========================
+
+# Django
+
+# =========================
+
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Migrations cache (optional — keep migrations normally)
+
+**/migrations/**pycache**/
+
+# =========================
+
+# Environment variables
+
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# =========================
+
+# IDE / Editor
+
+# =========================
+
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# =========================
+
+# OS files
+
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+
+# Node / frontend (Tailwind, React etc)
+
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# =========================
+
+# Testing / coverage
+
+# =========================
+
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.cache/
+
+# =========================
+
+# Secrets / keys
+
+# =========================
+
+*.pem
+*.key
+*.crt
+
+# =========================
+
+# Celery / background jobs
+
+# =========================
+
+celerybeat-schedule
+
+# =========================
+
+# Docker (if you add later)
+
+# =========================
+
+*.env.local
+docker-compose.override.yml
