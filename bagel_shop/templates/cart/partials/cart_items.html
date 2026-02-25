@@ -1,0 +1,66 @@
+{% load i18n core_extras %}
+{% if lines %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>{% trans "Item" %}</th>
+                    <th class="text-center" style="width: 160px;">{% trans "Quantity" %}</th>
+                    <th class="text-end">{% trans "Total" %}</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in lines %}
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">{{ line.name }}</div>
+                            {% if line.type == 'bundle' %}
+                                <ul class="list-unstyled small text-muted mb-0 mt-1">
+                                    {% for selection in line.bundle_snapshot.selections %}
+                                        <li>{{ selection.name }} x {{ selection.quantity }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <div class="small text-muted">{{ line.unit_price_cents|shekels }}</div>
+                        </td>
+                        <td>
+                            <form method="post"
+                                  action="{% url 'cart:update_quantity' line.key %}"
+                                  hx-post="{% url 'cart:update_quantity' line.key %}"
+                                  hx-target="#cart-live-region"
+                                  hx-swap="innerHTML">
+                                {% csrf_token %}
+                                <input
+                                    class="form-control text-center"
+                                    type="number"
+                                    min="0"
+                                    max="50"
+                                    name="quantity"
+                                    value="{{ line.quantity }}"
+                                    onchange="this.form.requestSubmit();"
+                                >
+                            </form>
+                        </td>
+                        <td class="text-end fw-semibold">{{ line.line_total_cents|shekels }}</td>
+                        <td class="text-end">
+                            <form method="post"
+                                  action="{% url 'cart:remove_item' line.key %}"
+                                  hx-post="{% url 'cart:remove_item' line.key %}"
+                                  hx-target="#cart-live-region"
+                                  hx-swap="innerHTML">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">{% trans "Remove" %}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <p class="text-muted mb-3">{% trans "Your cart is currently empty." %}</p>
+        <a href="{% url 'catalog:menu' %}" class="btn btn-accent">{% trans "Go to menu" %}</a>
+    </div>
+{% endif %}

@@ -1,0 +1,48 @@
+﻿{% load i18n %}
+<nav class="site-nav sticky-top pt-3">
+    <div class="container">
+        <div class="site-nav-shell navbar navbar-expand-xl">
+            <a class="site-brand" href="{% url 'pages:home' %}">
+                <span class="site-brand-main">AVIS BAGEL</span>
+                <span class="site-brand-sub">{% trans "Bakery" %}</span>
+            </a>
+
+            <button class="navbar-toggler site-nav-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav site-nav-links mx-auto mb-3 mb-xl-0">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">{% trans "Home" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'catalog:menu' %}">{% trans "Menu" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'bundles:list' %}">{% trans "Bundles" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'blog:post_list' %}">{% trans "Blog" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pages:about' %}">{% trans "About" %}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'pages:contact' %}">{% trans "Contact" %}</a></li>
+                </ul>
+
+                <div class="site-nav-actions d-flex flex-wrap align-items-center gap-2">
+                    {% get_current_language as CURRENT_LANGUAGE %}
+                    <form action="{% url 'set_language' %}" method="post" class="d-inline-flex">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        {% if CURRENT_LANGUAGE == 'he' %}
+                            <input type="hidden" name="language" value="en">
+                            <button type="submit" class="btn btn-sm site-lang-btn">EN</button>
+                        {% else %}
+                            <input type="hidden" name="language" value="he">
+                            <button type="submit" class="btn btn-sm site-lang-btn">HE</button>
+                        {% endif %}
+                    </form>
+
+                    <a href="{% url 'cart:detail' %}" class="btn btn-sm site-nav-cart d-inline-flex align-items-center gap-2" aria-label="{% trans 'Cart' %}">
+                        <span>{% trans "Cart" %}</span>
+                        {% include "cart/partials/cart_count.html" with item_count=cart_item_count %}
+                    </a>
+
+                    <a href="{% url 'checkout:checkout' %}" class="btn btn-sm site-nav-order">{% trans "Order now" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

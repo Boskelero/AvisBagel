@@ -1,0 +1,122 @@
+﻿{% extends "base.html" %}
+{% load i18n core_extras static %}
+
+{% block title %}{% trans "Bagel Bakery" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero-showcase mb-5" data-hero-rotator data-interval="5600">
+    <div class="hero-media">
+        <img src="{% static 'images/bagel-header-1.jpg' %}" class="hero-slide is-active" alt="Bagel display one">
+        <img src="{% static 'images/bagel-header-2.jpg' %}" class="hero-slide" alt="Bagel display two">
+        <div class="hero-dimmer"></div>
+    </div>
+
+    <div class="hero-copy">
+        <span class="hero-eyebrow">{% trans "Fresh bagels, modern bakery rhythm" %}</span>
+        <h1 class="hero-title">{% trans "Bring home handcrafted bagels with smooth online ordering." %}</h1>
+        <p class="hero-text">{% trans "Choose your favorites, build bundles, and pick up on your schedule with clean and simple checkout." %}</p>
+        <div class="hero-actions d-flex flex-wrap gap-2">
+            <a href="{% url 'catalog:menu' %}" class="btn btn-accent btn-lg">{% trans "Order from menu" %}</a>
+            <a href="{% url 'bundles:list' %}" class="btn btn-lg hero-ghost-btn">{% trans "Build a bundle" %}</a>
+        </div>
+        <div class="hero-indicators" aria-hidden="true">
+            <button class="hero-dot is-active" type="button" data-hero-dot="0"></button>
+            <button class="hero-dot" type="button" data-hero-dot="1"></button>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h3 fw-bold mb-0">{% trans "Featured bagels" %}</h2>
+        <a href="{% url 'catalog:menu' %}" class="link-dark fw-semibold">{% trans "View full menu" %}</a>
+    </div>
+    <div class="row g-3">
+        {% for product in featured_products %}
+            <div class="col-6 col-lg-4 col-xl-3">
+                <article class="card h-100 border-0 shadow-sm product-card featured-product-card">
+                    {% if product.primary_image %}
+                        <img src="{{ product.primary_image.image.url }}" class="card-img-top" alt="{{ product.primary_image.alt_text|default:product.name_i18n }}">
+                    {% else %}
+                        <img src="https://placehold.co/720x520/f7efe2/2f2a24?text={{ product.name_i18n|urlencode }}" class="card-img-top" alt="{{ product.name_i18n }}">
+                    {% endif %}
+                    <div class="card-body p-3">
+                        <h3 class="h6 fw-bold">{{ product.name_i18n }}</h3>
+                        <p class="text-muted small mb-2">{{ product.description_i18n|truncatechars:85 }}</p>
+                        <p class="fw-semibold mb-2">{{ product.price_cents|shekels }}</p>
+                        <a href="{{ product.get_absolute_url }}" class="btn btn-outline-dark btn-sm w-100">{% trans "View details" %}</a>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <p class="text-muted">{% trans "Featured products will appear soon." %}</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="p-4 rounded-4 bg-white h-100 border">
+                <h3 class="h5 fw-bold">1. {% trans "Choose your bagels" %}</h3>
+                <p class="text-muted mb-0">{% trans "Pick classics or seasonal specials from our menu." %}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 rounded-4 bg-white h-100 border">
+                <h3 class="h5 fw-bold">2. {% trans "Select pickup or delivery" %}</h3>
+                <p class="text-muted mb-0">{% trans "Choose a convenient slot and complete checkout quickly." %}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 rounded-4 bg-white h-100 border">
+                <h3 class="h5 fw-bold">3. {% trans "Enjoy fresh from the oven" %}</h3>
+                <p class="text-muted mb-0">{% trans "We prepare each order close to pickup time for top freshness." %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="catering-callout mb-5">
+    <div class="catering-callout-media">
+        <img src="{% static 'images/bagel-section-11.jpg' %}" alt="{% trans 'Bagel catering spread' %}">
+    </div>
+    <div class="catering-callout-copy">
+        <span class="catering-mark" aria-hidden="true"></span>
+        <h2 class="catering-title">{% trans "Cater your next event with bagels." %}</h2>
+        <p class="catering-text">{% trans "Bring handcrafted bagels, spreads, and bakery trays to your office meetings, family events, and team gatherings." %}</p>
+        <a href="{% url 'pages:contact' %}" class="btn btn-outline-dark catering-btn">{% trans "Request catering" %}</a>
+    </div>
+</section>
+
+<section class="brand-strip rounded-4 p-4 p-md-5 mb-5">
+    <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+            <h2 class="fw-bold mb-3">{% trans "A neighborhood bakery built on craft and consistency" %}</h2>
+            <p class="mb-0 text-muted">{% trans "Every bagel is hand-rolled, kettle-boiled, and baked daily in small batches." %}</p>
+        </div>
+        <div class="col-lg-5 text-lg-end">
+            <a href="{% url 'pages:about' %}" class="btn btn-dark">{% trans "Read our story" %}</a>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4 fw-bold mb-0">{% trans "From the blog" %}</h2>
+        <a href="{% url 'blog:post_list' %}" class="link-dark">{% trans "All posts" %}</a>
+    </div>
+    <div class="row g-4">
+        {% for post in recent_posts %}
+            <div class="col-md-6">
+                <article class="p-4 border rounded-4 bg-white h-100">
+                    <h3 class="h5 fw-bold"><a class="text-decoration-none text-dark" href="{{ post.get_absolute_url }}">{{ post.title_i18n }}</a></h3>
+                    <p class="text-muted mb-0">{{ post.excerpt_or_content_i18n|truncatechars:140 }}</p>
+                </article>
+            </div>
+        {% empty %}
+            <p class="text-muted">{% trans "Blog stories will appear soon." %}</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Blog" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <h1 class="display-6 fw-bold mb-2">{% trans "Bagel journal" %}</h1>
+    <p class="text-muted mb-0">{% trans "Stories, baking tips, and seasonal updates from our bakery." %}</p>
+</section>
+
+<div class="row g-4">
+    {% for post in posts %}
+        <div class="col-md-6">
+            <article class="border rounded-4 bg-white h-100 overflow-hidden">
+                {% if post.cover_image %}
+                    <img src="{{ post.cover_image.url }}" class="w-100 blog-cover-image" alt="{{ post.title_i18n }}">
+                {% else %}
+                    <img src="https://placehold.co/900x500/f4ecdf/2f2a24?text={{ post.title_i18n|urlencode }}" class="w-100 blog-cover-image" alt="{{ post.title_i18n }}">
+                {% endif %}
+                <div class="p-4">
+                    <h2 class="h4 fw-bold"><a class="text-decoration-none text-dark" href="{{ post.get_absolute_url }}">{{ post.title_i18n }}</a></h2>
+                    <p class="text-muted mb-2">{{ post.excerpt_or_content_i18n|truncatechars:160 }}</p>
+                    <div class="d-flex justify-content-between align-items-center gap-2 blog-meta-row">
+                        <small class="text-muted">{{ post.published_at|date:"d.m.Y" }}</small>
+                        <a href="{{ post.get_absolute_url }}" class="btn btn-outline-dark btn-sm blog-read-btn">{% trans "Read more" %}</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    {% empty %}
+        <p class="text-muted">{% trans "No posts have been published yet." %}</p>
+    {% endfor %}
+</div>
+{% endblock %}

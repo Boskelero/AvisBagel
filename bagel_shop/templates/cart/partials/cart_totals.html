@@ -1,0 +1,14 @@
+{% load i18n core_extras %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+            <span>{% trans "Subtotal" %}</span>
+            <strong>{{ subtotal_cents|shekels }}</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-3">
+            <span>{% trans "Estimated total" %}</span>
+            <strong>{{ estimated_total_cents|shekels }}</strong>
+        </div>
+        <a href="{% url 'checkout:checkout' %}" class="btn btn-accent w-100 {% if not lines %}disabled{% endif %}">{% trans "Proceed to checkout" %}</a>
+    </div>
+</div>

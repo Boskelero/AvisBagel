@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ post.title_i18n }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<article class="blog-article mx-auto" style="max-width: 850px;">
+    <header class="mb-4 d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+            <h1 class="display-6 fw-bold mb-3">{{ post.title_i18n }}</h1>
+            <p class="text-muted mb-0">{{ post.published_at|date:"d.m.Y" }}</p>
+        </div>
+        <a href="{% url 'blog:post_list' %}" class="btn btn-outline-dark blog-back-btn">{% trans "Back to blog" %}</a>
+    </header>
+
+    {% if post.cover_image %}
+        <img src="{{ post.cover_image.url }}" class="img-fluid rounded-4 mb-4 blog-detail-cover" alt="{{ post.title_i18n }}">
+    {% else %}
+        <img src="https://placehold.co/1200x650/f4ecdf/2f2a24?text={{ post.title_i18n|urlencode }}" class="img-fluid rounded-4 mb-4 blog-detail-cover" alt="{{ post.title_i18n }}">
+    {% endif %}
+
+    <div class="post-content fs-5 lh-lg">
+        {{ post.content_i18n|linebreaks }}
+    </div>
+</article>
+{% endblock %}

@@ -1,0 +1,90 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: avisbagel 1.0\n"
+"POT-Creation-Date: 2026-02-25 00:00+0000\n"
+"PO-Revision-Date: 2026-02-25 00:00+0000\n"
+"Last-Translator: Avis Bagel Team\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Home"
+msgstr "Home"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Bundles"
+msgstr "Bundles"
+
+msgid "Blog"
+msgstr "Blog"
+
+msgid "About"
+msgstr "About"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Cart"
+msgstr "Cart"
+
+msgid "Order from menu"
+msgstr "Order from menu"
+
+msgid "Build a bundle"
+msgstr "Build a bundle"
+
+msgid "Add to cart"
+msgstr "Add to cart"
+
+msgid "Checkout"
+msgstr "Checkout"
+
+msgid "Place order"
+msgstr "Place order"
+
+msgid "Order confirmation"
+msgstr "Order confirmation"
+
+msgid "Thank you. Your order has been received."
+msgstr "Thank you. Your order has been received."
+
+msgid "Proceed to checkout"
+msgstr "Proceed to checkout"
+
+msgid "Your cart is currently empty."
+msgstr "Your cart is currently empty."
+
+msgid "Please enter your full name."
+msgstr "Please enter your full name."
+
+msgid "Please enter an email address."
+msgstr "Please enter an email address."
+
+msgid "Please enter a phone number."
+msgstr "Please enter a phone number."
+
+msgid "Please enter your delivery address."
+msgstr "Please enter your delivery address."
+
+msgid "Please enter your city."
+msgstr "Please enter your city."
+
+msgid "Please choose a pickup time slot."
+msgstr "Please choose a pickup time slot."
+
+msgid "Order created successfully."
+msgstr "Order created successfully."
+
+msgid "Thank you for joining our newsletter."
+msgstr "Thank you for joining our newsletter."
+
+msgid "This email is already subscribed."
+msgstr "This email is already subscribed."
+
+msgid "Please provide a valid email address."
+msgstr "Please provide a valid email address."

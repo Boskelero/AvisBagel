@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n core_extras %}
+
+{% block title %}{% trans "Order confirmation" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="p-4 p-md-5 border rounded-4 bg-white">
+    <h1 class="display-6 fw-bold mb-2">{% trans "Thank you. Your order has been received." %}</h1>
+    <p class="text-muted">{% trans "We sent a confirmation email with your order details." %}</p>
+
+    <div class="mb-3">
+        <span class="text-muted">{% trans "Order number" %}:</span>
+        <strong>{{ order.number }}</strong>
+    </div>
+
+    <ul class="list-group mb-4">
+        {% for item in order.items.all %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ item.product_name }} x {{ item.quantity }}</span>
+                <strong>{{ item.line_total_cents|shekels }}</strong>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <span class="h5 mb-0">{% trans "Total" %}: {{ order.total_cents|shekels }}</span>
+        <a href="{% url 'pages:home' %}" class="btn btn-accent">{% trans "Back to home" %}</a>
+    </div>
+</section>
+{% endblock %}

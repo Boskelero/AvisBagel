@@ -1,0 +1,14 @@
+Order number: {{ order.number }}
+Customer: {{ order.customer_name }}
+Phone: {{ order.phone }}
+Email: {{ order.email }}
+
+Fulfillment: {{ order.fulfillment_type }}
+Pickup slot: {{ order.pickup_time_slot }}
+
+Items:
+{% for item in order.items.all %}
+- {{ item.product_name }} x {{ item.quantity }} ({{ item.line_total_cents }})
+{% endfor %}
+
+Total cents: {{ order.total_cents }}

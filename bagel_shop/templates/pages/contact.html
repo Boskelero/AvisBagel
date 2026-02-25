@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Contact" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="row g-4">
+    <div class="col-lg-6">
+        <h1 class="display-6 fw-bold mb-3">{% trans "Contact us" %}</h1>
+        <p class="text-muted">{% trans "Have a question about custom catering or large office orders? We are happy to help." %}</p>
+        <p class="mb-1"><strong>{% trans "Phone" %}:</strong> {{ SITE_PHONE }}</p>
+        <p class="mb-1"><strong>{% trans "Email" %}:</strong> {{ SITE_EMAIL }}</p>
+        <p class="mb-0"><strong>{% trans "Address" %}:</strong> {{ SITE_ADDRESS }}</p>
+    </div>
+    <div class="col-lg-6">
+        <div class="p-4 border rounded-4 bg-white">
+            <h2 class="h5 fw-bold mb-3">{% trans "Opening hours" %}</h2>
+            <p class="mb-1">{% trans "Sunday to Thursday: 07:00 to 18:00" %}</p>
+            <p class="mb-1">{% trans "Friday: 07:00 to 14:00" %}</p>
+            <p class="mb-0">{% trans "Saturday: Closed" %}</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,2 @@
+{% load i18n %}
+<span id="cart-count" class="badge rounded-pill cart-count-badge" {% if oob %}hx-swap-oob="outerHTML"{% endif %}>{{ item_count|default:0 }}</span>

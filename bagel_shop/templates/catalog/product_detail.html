@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n core_extras %}
+
+{% block title %}{{ product.name_i18n }} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="row g-5 align-items-start">
+    <div class="col-lg-6">
+        {% if product.images.all %}
+            <div class="row g-3">
+                {% for image in product.images.all %}
+                    <div class="col-12 {% if not forloop.first %}col-sm-6{% endif %}">
+                        <img src="{{ image.image.url }}" class="img-fluid rounded-4 w-100" alt="{{ image.alt_text|default:product.name_i18n }}">
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <img src="https://placehold.co/1000x800/f5ecdd/2f2a24?text={{ product.name_i18n|urlencode }}" class="img-fluid rounded-4" alt="{{ product.name_i18n }}">
+        {% endif %}
+    </div>
+    <div class="col-lg-6">
+        <p class="text-uppercase small text-muted mb-2">{{ product.category.name_i18n }}</p>
+        <h1 class="display-6 fw-bold mb-3">{{ product.name_i18n }}</h1>
+        <p class="text-muted">{{ product.description_i18n }}</p>
+        <p class="h4 fw-bold mb-4">{{ product.price_cents|shekels }}</p>
+
+        <form method="post" action="{% url 'cart:add_product' product.id %}"
+              hx-post="{% url 'cart:add_product' product.id %}"
+              hx-target="#cart-live-region"
+              hx-swap="innerHTML"
+              class="row g-3 align-items-end">
+            {% csrf_token %}
+            <div class="col-sm-4">
+                <label for="id_quantity" class="form-label">{% trans "Quantity" %}</label>
+                {{ add_to_cart_form.quantity }}
+            </div>
+            <div class="col-sm-8">
+                <button class="btn btn-accent btn-lg w-100" type="submit">{% trans "Add to cart" %}</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% include "cart/partials/cart_count.html" with item_count=item_count oob=True %}
+<div id="cart-items" hx-swap-oob="innerHTML">
+    {% include "cart/partials/cart_items.html" %}
+</div>
+<div id="cart-totals" hx-swap-oob="innerHTML">
+    {% include "cart/partials/cart_totals.html" %}
+</div>

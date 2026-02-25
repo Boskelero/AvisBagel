@@ -1,0 +1,33 @@
+{% load i18n %}
+<footer class="site-footer mt-5 pt-5 pb-4 border-top">
+    <div class="container">
+        <div class="row g-4 align-items-start">
+            <div class="col-md-4">
+                <h5 class="fw-bold">{{ SITE_NAME }}</h5>
+                <p class="text-muted mb-1">{% trans "Fresh bagels baked every morning." %}</p>
+                <p class="text-muted mb-0">{{ SITE_ADDRESS }}</p>
+                <p class="text-muted mb-0">{{ SITE_PHONE }}</p>
+            </div>
+            <div class="col-md-4">
+                <h6 class="fw-bold">{% trans "Opening hours" %}</h6>
+                <p class="text-muted mb-1">{% trans "Sunday to Thursday: 07:00 to 18:00" %}</p>
+                <p class="text-muted mb-1">{% trans "Friday: 07:00 to 14:00" %}</p>
+                <p class="text-muted mb-0">{% trans "Saturday: Closed" %}</p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" class="text-decoration-none">Instagram</a>
+                    <a href="#" class="text-decoration-none">Facebook</a>
+                    <a href="#" class="text-decoration-none">TikTok</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h6 class="fw-bold">{% trans "Newsletter" %}</h6>
+                <form method="post" action="{% url 'notifications:subscribe' %}" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="email" name="email" class="form-control" placeholder="{% trans 'Your email address' %}" required>
+                    <button class="btn btn-accent" type="submit">{% trans "Join" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</footer>
