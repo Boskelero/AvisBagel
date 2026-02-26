@@ -18,7 +18,8 @@ AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
 AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="")
 AWS_S3_SIGNATURE_VERSION = config("AWS_S3_SIGNATURE_VERSION", default="s3v4")
 AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False
+AWS_QUERYSTRING_AUTH = config("AWS_QUERYSTRING_AUTH", default=True, cast=bool)
+AWS_QUERYSTRING_EXPIRE = config("AWS_QUERYSTRING_EXPIRE", default=86400, cast=int)
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_ADDRESSING_STYLE = config("AWS_S3_ADDRESSING_STYLE", default="path")
 
@@ -30,6 +31,7 @@ STORAGES = {
             "endpoint_url": AWS_S3_ENDPOINT_URL,
             "default_acl": AWS_DEFAULT_ACL,
             "querystring_auth": AWS_QUERYSTRING_AUTH,
+            "querystring_expire": AWS_QUERYSTRING_EXPIRE,
             "file_overwrite": AWS_S3_FILE_OVERWRITE,
         },
     },

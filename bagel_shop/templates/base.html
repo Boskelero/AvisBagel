@@ -17,7 +17,11 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <div class="site-top-banner">
+        <img src="{% static 'images/header-image-avi.png' %}" class="site-top-banner-image" alt="Bagel display one">
+    </div>
     {% include "includes/navbar.html" %}
+
     <main class="container py-4 py-md-5">
         {% include "includes/messages.html" %}
         {% block content %}{% endblock %}
