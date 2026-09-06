@@ -46,11 +46,7 @@
         {% for entry in bagel_entries %}
         <div class="col-12 col-sm-6 col-lg-4">
             <article class="order-product-card h-100" data-order-product-card>
-                {% if entry.product.primary_image %}
-                <img src="{{ entry.product.primary_image.image.url }}" class="order-product-image" alt="{{ entry.product.primary_image.alt_text|default:entry.product.name_i18n }}">
-                {% else %}
                 <div class="order-product-mark" aria-hidden="true"><span></span></div>
-                {% endif %}
                 <div class="order-product-info">
                     <div class="d-flex justify-content-between align-items-start gap-2">
                         <h3>{{ entry.product.name_i18n }}</h3>
@@ -61,6 +57,7 @@
                     {% else %}
                     <p>{% trans "Classic bagel · eligible for bundle savings" %}</p>
                     {% endif %}
+                    <a class="order-product-detail" href="{% url 'catalog:product_detail' entry.product.slug %}">{% trans "View details" %} <span aria-hidden="true">→</span></a>
                     <div class="order-quantity" role="group" aria-label="{% blocktrans with name=entry.product.name_i18n %}Quantity for {{ name }}{% endblocktrans %}">
                         <button type="button" data-quantity-decrease aria-label="{% trans 'Decrease quantity' %}">−</button>
                         <input id="product_{{ entry.product_id }}" name="product_{{ entry.product_id }}" type="number" inputmode="numeric" min="0" max="{{ drop.max_bagels_per_order }}" value="{{ entry.selected_quantity }}" data-bagel-quantity data-upcharge-cents="{{ entry.product.specialty_upcharge_cents }}" aria-label="{% blocktrans with name=entry.product.name_i18n %}{{ name }} quantity{% endblocktrans %}">
@@ -84,6 +81,7 @@
                 <div class="order-product-info">
                     <div class="d-flex justify-content-between align-items-start gap-2"><h3>{{ entry.product.name_i18n }}</h3><strong class="order-product-price">{{ entry.price_override_cents|default:entry.product.price_cents|shekels }}</strong></div>
                     <p>{% if entry.product.description_i18n %}{{ entry.product.description_i18n }}{% else %}{% trans "Small-batch extra for this Drop" %}{% endif %}</p>
+                    <a class="order-product-detail" href="{% url 'catalog:product_detail' entry.product.slug %}">{% trans "View details" %} <span aria-hidden="true">→</span></a>
                     <div class="order-quantity" role="group" aria-label="{% blocktrans with name=entry.product.name_i18n %}Quantity for {{ name }}{% endblocktrans %}">
                         <button type="button" data-quantity-decrease aria-label="{% trans 'Decrease quantity' %}">−</button>
                         <input id="product_{{ entry.product_id }}" name="product_{{ entry.product_id }}" type="number" inputmode="numeric" min="0" max="20" value="{{ entry.selected_quantity }}" data-extra-quantity data-unit-price-cents="{{ entry.price_override_cents|default:entry.product.price_cents }}" aria-label="{% blocktrans with name=entry.product.name_i18n %}{{ name }} quantity{% endblocktrans %}">

@@ -91,6 +91,15 @@ class DropOrderingTests(TestCase):
         self.assertEqual(calculate_bagel_base_price(12), 12000)
         self.assertEqual(calculate_bagel_base_price(18), 18500)
 
+    def test_order_builder_stays_image_free_and_links_to_product_details(self):
+        response = Client().get(reverse("drops:order"))
+        self.assertContains(
+            response,
+            reverse("catalog:product_detail", args=[self.plain.slug]),
+        )
+        self.assertContains(response, "View details", count=2)
+        self.assertNotContains(response, "order-product-image")
+
     def test_cart_and_checkout_explain_deal_pricing_and_pickup(self):
         client = Client()
         self._add(client, self.plain, 6)

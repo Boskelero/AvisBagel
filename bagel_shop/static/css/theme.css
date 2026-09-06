@@ -1898,10 +1898,38 @@ textarea:focus {
 }
 
 .order-product-info p {
-    margin: 0.45rem 0 1rem;
+    margin: 0.45rem 0 0.55rem;
     color: var(--muted);
     font-size: 0.76rem;
     line-height: 1.35;
+}
+
+.order-product-detail {
+    align-self: flex-start;
+    margin-bottom: 0.8rem;
+    padding: 0.32rem 0.58rem;
+    border: 1px solid #ddc8b3;
+    border-radius: 999px;
+    color: #8f4f25;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.order-product-detail span {
+    display: inline-block;
+    transition: transform 0.16s ease;
+}
+
+.order-product-detail:hover {
+    border-color: #c88957;
+    background: #fff7ed;
+    color: var(--accent-dark);
+    text-decoration: none;
+}
+
+.order-product-detail:hover span {
+    transform: translateX(0.2rem);
 }
 
 .order-product-price {
