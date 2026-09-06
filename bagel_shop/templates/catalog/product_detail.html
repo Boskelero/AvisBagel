@@ -24,6 +24,7 @@
         <p class="text-muted">{{ product.description_i18n }}</p>
         <p class="h4 fw-bold mb-4">{{ product.price_cents|shekels }}</p>
 
+        {% if is_available %}
         <form method="post" action="{% url 'cart:add_product' product.id %}"
               hx-post="{% url 'cart:add_product' product.id %}"
               hx-target="#cart-live-region"
@@ -38,6 +39,24 @@
                 <button class="btn btn-accent btn-lg w-100" type="submit">{% trans "Add to cart" %}</button>
             </div>
         </form>
+        {% else %}
+            <div class="product-availability-card">
+                {% if featured_drop.current_state == 'scheduled' and is_in_featured_drop %}
+                    <span class="product-availability-eyebrow">{% trans "Coming in the next Drop" %}</span>
+                    <h2 class="h5 fw-bold mt-2">{{ featured_drop.name }}</h2>
+                    <p class="text-muted mb-3">{% blocktrans with date=featured_drop.opens_at|date:"l, F j \a\t H:i" %}Ordering opens {{ date }}. You can return when the countdown reaches zero.{% endblocktrans %}</p>
+                    <a href="{% url 'pages:home' %}" class="btn btn-accent">{% trans "See the Drop countdown" %}</a>
+                {% else %}
+                    <span class="product-availability-eyebrow">{% trans "Part of our rotating menu" %}</span>
+                    <h2 class="h5 fw-bold mt-2">{% trans "Look for it in a future Drop" %}</h2>
+                    <p class="text-muted mb-3">{% trans "Each Drop has its own hand-picked selection. Join notifications and we will let you know when the next menu opens." %}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'catalog:menu' %}" class="btn btn-outline-dark">{% trans "Back to the menu" %}</a>
+                        <a href="#drop-notify" class="btn btn-accent">{% trans "Get Drop alerts" %}</a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

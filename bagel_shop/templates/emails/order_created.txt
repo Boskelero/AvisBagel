@@ -1,14 +1,15 @@
-Order number: {{ order.number }}
+{% load core_extras %}Order number: {{ order.number }}
 Customer: {{ order.customer_name }}
 Phone: {{ order.phone }}
 Email: {{ order.email }}
 
-Fulfillment: {{ order.fulfillment_type }}
-Pickup slot: {{ order.pickup_time_slot }}
+Fulfillment: Pickup
+{% if order.drop %}Pickup: {{ order.drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ order.drop.pickup_ends_at|date:"H:i" }}
+Location: {{ order.drop.pickup_location }}{% endif %}
 
 Items:
 {% for item in order.items.all %}
 - {{ item.product_name }} x {{ item.quantity }} ({{ item.line_total_cents }})
 {% endfor %}
 
-Total cents: {{ order.total_cents }}
+Total: {{ order.total_cents|shekels }}

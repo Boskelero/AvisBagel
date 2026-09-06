@@ -78,6 +78,12 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    TYPE_BAGEL = "bagel"
+    TYPE_EXTRA = "extra"
+    PRODUCT_TYPES = [
+        (TYPE_BAGEL, "Bagel"),
+        (TYPE_EXTRA, "Extra"),
+    ]
     INVENTORY_MODE_SIMPLE = "simple"
     INVENTORY_MODE_PREORDER = "preorder"
     INVENTORY_MODES = [
@@ -98,6 +104,8 @@ class Product(models.Model):
     description_he = models.TextField(blank=True)
     description_en = models.TextField(blank=True)
     price_cents = models.PositiveIntegerField()
+    product_type = models.CharField(max_length=20, choices=PRODUCT_TYPES, default=TYPE_BAGEL)
+    specialty_upcharge_cents = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     inventory_mode = models.CharField(
@@ -143,6 +151,10 @@ class Product(models.Model):
 
     def get_absolute_url(self):
         return reverse("catalog:product_detail", kwargs={"slug": self.slug})
+
+    @property
+    def counts_toward_bagel_capacity(self):
+        return self.product_type == self.TYPE_BAGEL
 
 
 class ProductImage(models.Model):

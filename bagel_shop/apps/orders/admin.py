@@ -30,15 +30,17 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = (
         "number",
         "customer_name",
+        "drop",
+        "bagel_quantity",
         "fulfillment_type",
         "payment_method",
         "status",
         "total_cents",
         "created_at",
     )
-    list_filter = ("status", "fulfillment_type", "payment_method", "created_at")
+    list_filter = ("status", "drop", "fulfillment_type", "payment_method", "created_at")
     search_fields = ("number", "customer_name", "email", "phone")
-    readonly_fields = ("number", "subtotal_cents", "total_cents", "created_at", "updated_at")
+    readonly_fields = ("number", "checkout_token", "subtotal_cents", "total_cents", "created_at", "updated_at")
     inlines = [OrderItemInline, OrderAddressInline]
 
 

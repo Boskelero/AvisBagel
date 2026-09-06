@@ -1,32 +1,74 @@
 ﻿{% extends "base.html" %}
 {% load i18n core_extras static %}
 
-{% block title %}{% trans "Bagel Bakery" %} | {{ SITE_NAME }}{% endblock %}
+{% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{% trans "Bagel Bakery" %} | {{ SITE_NAME }}{% endif %}{% endblock %}
 
 {% block content %}
 
 
+{% if featured_drop %}
+<section class="drop-spotlight mb-5">
+    <div class="drop-spotlight-main">
+        <span class="drop-spotlight-eyebrow">{% if featured_drop.current_state == 'scheduled' %}{% trans "Next Drop" %}{% elif featured_drop.current_state == 'live' %}{% trans "Ordering is open" %}{% else %}{% trans "Drop update" %}{% endif %}</span>
+        {% if featured_drop.current_state == 'scheduled' %}
+            <h1 class="drop-spotlight-title">{% trans "Hey, don't miss the next Drop." %}</h1>
+            <p class="drop-spotlight-name">{{ featured_drop.name }}</p>
+            <div class="drop-countdown-block">
+                <span>{% trans "Ordering starts in" %}</span>
+                <strong data-drop-countdown data-target="{{ featured_drop.opens_at|date:'c' }}">—</strong>
+            </div>
+            <p class="drop-spotlight-copy">{% trans "Leave your email and we will let you know before ordering opens." %}</p>
+        {% elif featured_drop.current_state == 'live' %}
+            <h1 class="drop-spotlight-title">{% trans "The Drop is live." %}</h1>
+            <p class="drop-spotlight-name">{{ featured_drop.name }}</p>
+            <div class="drop-countdown-block">
+                <span>{% trans "Ordering closes in" %}</span>
+                <strong data-drop-countdown data-target="{{ featured_drop.closes_at|date:'c' }}">—</strong>
+            </div>
+            <p class="drop-spotlight-copy">{% blocktrans with remaining=featured_drop.remaining_bagels %}{{ remaining }} bagels are still available for this pickup.{% endblocktrans %}</p>
+            <a href="{% url 'drops:order' %}" class="btn btn-accent btn-lg drop-order-button">{% trans "Order this Drop" %}</a>
+        {% else %}
+            <h1 class="drop-spotlight-title">{% trans "This Drop sold out." %}</h1>
+            <p class="drop-spotlight-name">{{ featured_drop.name }}</p>
+            <p class="drop-spotlight-copy">{% trans "Join the notification list so you hear about the next one before it opens." %}</p>
+        {% endif %}
+
+        <form method="post" action="{% url 'notifications:subscribe' %}" class="drop-alert-form">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <label for="hero-drop-email">{% if featured_drop.current_state == 'live' %}{% trans "Get the next Drop alert" %}{% else %}{% trans "Email me before the Drop" %}{% endif %}</label>
+            <div class="drop-alert-controls">
+                <input id="hero-drop-email" type="email" name="email" class="form-control form-control-lg" placeholder="{% trans 'Your email address' %}" autocomplete="email" required>
+                <button class="btn btn-light btn-lg" type="submit">{% trans "Alert me" %}</button>
+            </div>
+        </form>
+    </div>
+    <aside class="drop-spotlight-details" aria-label="{% trans 'Drop details' %}">
+        <div class="drop-detail-row"><span>{% trans "Pickup" %}</span><strong>{{ featured_drop.pickup_starts_at|date:"l, F j" }}<br>{{ featured_drop.pickup_starts_at|date:"H:i" }}–{{ featured_drop.pickup_ends_at|date:"H:i" }}</strong></div>
+        <div class="drop-detail-row"><span>{% trans "Location" %}</span><strong>{{ featured_drop.pickup_location }}</strong></div>
+        <div class="drop-detail-row"><span>{% trans "Available" %}</span><strong>{{ featured_drop.remaining_bagels }} / {{ featured_drop.bagel_capacity }} {% trans "bagels" %}</strong></div>
+        <div class="drop-detail-row"><span>{% trans "Order limit" %}</span><strong>{% blocktrans with cap=featured_drop.max_bagels_per_order %}Up to {{ cap }} per customer{% endblocktrans %}</strong></div>
+    </aside>
+</section>
+{% else %}
 <section class="hero-showcase mb-5" data-hero-rotator data-interval="5600">
     <div class="hero-media">
         <img src="{% static 'images/bagel-header-1.jpg' %}" class="hero-slide is-active" alt="Bagel display one">
         <img src="{% static 'images/bagel-header-2.jpg' %}" class="hero-slide" alt="Bagel display two">
         <div class="hero-dimmer"></div>
     </div>
-
     <div class="hero-copy">
-        <span class="hero-eyebrow">{% trans "Fresh bagels, modern bakery rhythm" %}</span>
-        <h1 class="hero-title">{% trans "Bring home handcrafted bagels with smooth online ordering." %}</h1>
-        <p class="hero-text">{% trans "Choose your favorites, build bundles, and pick up on your schedule with clean and simple checkout." %}</p>
+        <span class="hero-eyebrow">{% trans "Hand-rolled. Cold-proofed. New York tradition." %}</span>
+        <h1 class="hero-title">{% trans "The next Abu Avi Bagels Drop is coming soon." %}</h1>
+        <p class="hero-text">{% trans "Browse the menu and join the list to hear when ordering opens." %}</p>
         <div class="hero-actions d-flex flex-wrap gap-2">
-            <a href="{% url 'catalog:menu' %}" class="btn btn-accent btn-lg">{% trans "Order from menu" %}</a>
-            <a href="{% url 'bundles:list' %}" class="btn btn-lg hero-ghost-btn">{% trans "Build a bundle" %}</a>
+            <a href="{% url 'catalog:menu' %}" class="btn btn-accent btn-lg">{% trans "View menu" %}</a>
+            <a href="#drop-notify" class="btn btn-lg hero-ghost-btn">{% trans "Drop notifications" %}</a>
         </div>
-        <div class="hero-indicators" aria-hidden="true">
-            <button class="hero-dot is-active" type="button" data-hero-dot="0"></button>
-            <button class="hero-dot" type="button" data-hero-dot="1"></button>
-        </div>
+        <div class="hero-indicators" aria-hidden="true"><button class="hero-dot is-active" type="button" data-hero-dot="0"></button><button class="hero-dot" type="button" data-hero-dot="1"></button></div>
     </div>
 </section>
+{% endif %}
 
 <section class="mb-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -66,8 +108,8 @@
         </div>
         <div class="col-md-4">
             <div class="p-4 rounded-4 bg-white h-100 border">
-                <h3 class="h5 fw-bold">2. {% trans "Select pickup or delivery" %}</h3>
-                <p class="text-muted mb-0">{% trans "Choose a convenient slot and complete checkout quickly." %}</p>
+                <h3 class="h5 fw-bold">2. {% trans "Reserve your pickup order" %}</h3>
+                <p class="text-muted mb-0">{% trans "We automatically apply six- and twelve-bagel pricing." %}</p>
             </div>
         </div>
         <div class="col-md-4">
@@ -87,7 +129,7 @@
         <span class="catering-mark" aria-hidden="true"></span>
         <h2 class="catering-title">{% trans "Cater your next event with bagels." %}</h2>
         <p class="catering-text">{% trans "Bring handcrafted bagels, spreads, and bakery trays to your office meetings, family events, and team gatherings." %}</p>
-        <a href="{% url 'pages:contact' %}" class="btn btn-outline-dark catering-btn">{% trans "Request catering" %}</a>
+        <a href="{% url 'pages:catering' %}" class="btn btn-outline-dark catering-btn">{% trans "Request catering" %}</a>
     </div>
 </section>
 
@@ -95,7 +137,7 @@
     <div class="row g-4 align-items-center">
         <div class="col-lg-7">
             <h2 class="fw-bold mb-3">{% trans "A neighborhood bakery built on craft and consistency" %}</h2>
-            <p class="mb-0 text-muted">{% trans "Every bagel is hand-rolled, kettle-boiled, and baked daily in small batches." %}</p>
+            <p class="mb-0 text-muted">{% trans "Every bagel is hand-rolled, kettle-boiled, and baked in small batches for each Drop." %}</p>
         </div>
         <div class="col-lg-5 text-lg-end">
             <a href="{% url 'pages:about' %}" class="btn btn-dark">{% trans "Read our story" %}</a>
@@ -119,6 +161,45 @@
         {% empty %}
             <p class="text-muted">{% trans "Blog stories will appear soon." %}</p>
         {% endfor %}
+    </div>
+</section>
+
+<section class="home-faq mt-5" aria-labelledby="home-faq-title">
+    <div class="home-faq-heading">
+        <span class="text-uppercase small fw-bold text-muted">{% trans "Good to know" %}</span>
+        <h2 id="home-faq-title" class="display-6 fw-bold mb-2">{% trans "Frequently asked questions" %}</h2>
+        <p class="text-muted mb-0">{% trans "Everything you need to know before the next bagel Drop." %}</p>
+        <img class="home-faq-illustration" src="{% static 'images/faq-chef.png' %}" alt="" loading="lazy" aria-hidden="true">
+    </div>
+    <div class="home-faq-list">
+        <details class="home-faq-item" open>
+            <summary>{% trans "What is a bagel Drop?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "A Drop is a limited preorder window for a specific bake and pickup date. Ordering stays open until the cutoff time or until the available bagels sell out." %}</p></div>
+        </details>
+        <details class="home-faq-item">
+            <summary>{% trans "Can I choose any mix of bagel flavors?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "Yes. Choose any mix from the flavors offered in that Drop. Every bagel counts toward the same shared Drop capacity." %}</p></div>
+        </details>
+        <details class="home-faq-item">
+            <summary>{% trans "How do the six- and twelve-bagel deals work?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "Deal pricing is applied automatically as you build your order. Specialty flavors such as Cinnamon Raisin and Jalapeño Cheddar add their listed upcharge." %}</p></div>
+        </details>
+        <details class="home-faq-item">
+            <summary>{% trans "Where and when do I pick up my order?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "This is pickup only. The exact pickup date, window, and Tel Aviv location are shown on the Drop page and again in your order confirmation." %}</p></div>
+        </details>
+        <details class="home-faq-item">
+            <summary>{% trans "Is there a maximum order size?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "Each Drop may have a per-customer bagel limit so more people get a chance to order. The current limit is always shown before you begin." %}</p></div>
+        </details>
+        <details class="home-faq-item">
+            <summary>{% trans "What happens if there is no active Drop or it sells out?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "Join Drop notifications below and we will email you when a new ordering window opens." %} <a href="#drop-notify">{% trans "Join the notification list" %}</a>.</p></div>
+        </details>
+        <details class="home-faq-item">
+            <summary>{% trans "Can I arrange a larger or catered order?" %}</summary>
+            <div class="home-faq-answer"><p>{% trans "Yes. For offices, parties, simchas, or orders beyond the current Drop limit, send a catering inquiry so we can coordinate directly." %} <a href="{% url 'pages:catering' %}">{% trans "Contact us about catering" %}</a>.</p></div>
+        </details>
     </div>
 </section>
 {% endblock %}

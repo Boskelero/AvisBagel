@@ -1,0 +1,10 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n core_extras %}
+
+{% block title %}{{ customer.customer_name }} | {{ SITE_NAME }}{% endblock %}
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-start mb-4"><div><h1 class="display-6 fw-bold">{{ customer.customer_name }}</h1><p class="mb-1">{{ customer.email }}</p><p class="text-muted">{{ customer.phone }}</p></div><a href="{% url 'drops:staff_customers' %}" class="btn btn-outline-dark">{% trans "All customers" %}</a></div>
+<h2 class="h4 fw-bold">{% trans "Order history" %}</h2>
+{% for order in orders %}<article class="bg-white border rounded-4 p-3 mb-3"><div class="d-flex justify-content-between"><div><strong>{{ order.number }}</strong> · {{ order.created_at|date:"M j, Y H:i" }}{% if order.drop %}<br><small class="text-muted">{{ order.drop.name }}</small>{% endif %}</div><div class="text-end"><strong>{{ order.total_cents|shekels }}</strong><br><span class="badge text-bg-dark">{{ order.get_status_display }}</span></div></div><ul class="small mt-3 mb-0">{% for item in order.items.all %}<li>{{ item.product_name }} × {{ item.quantity }}</li>{% endfor %}</ul></article>{% endfor %}
+{% include "drops/includes/pagination.html" %}
+{% endblock %}

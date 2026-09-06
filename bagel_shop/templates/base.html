@@ -4,7 +4,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+    <meta name="theme-color" content="#22282d">
+    <title>{% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{{ SITE_NAME }}{% endif %}{% endblock %}</title>
+    <meta name="description" content="{% if PAGE_META.meta_description %}{{ PAGE_META.meta_description }}{% else %}Hand-rolled, cold-proofed bagels available through limited preorder Drops in Tel Aviv.{% endif %}">
+    <meta property="og:title" content="{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{{ SITE_NAME }}{% endif %}">
+    <meta property="og:description" content="{% if PAGE_META.meta_description %}{{ PAGE_META.meta_description }}{% else %}Hand-rolled, cold-proofed bagels available through limited preorder Drops in Tel Aviv.{% endif %}">
+    <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Public+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -13,18 +22,18 @@
     {% else %}
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     {% endif %}
-    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}?v=brand-nav-6">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-    {% include "includes/navbar.html" %}
+    {% block site_nav %}{% include "includes/navbar.html" %}{% endblock %}
 
     <main class="container py-4 py-md-5">
         {% include "includes/messages.html" %}
         {% block content %}{% endblock %}
     </main>
-    {% include "includes/footer.html" %}
+    {% block site_footer %}{% include "includes/footer.html" %}{% endblock %}
 
     <div id="cart-live-region" class="visually-hidden"></div>
 

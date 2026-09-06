@@ -13,9 +13,9 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path("", include("bagel_shop.apps.pages.urls")),
     path("menu/", include("bagel_shop.apps.catalog.urls")),
-    path("bundles/", include("bagel_shop.apps.bundles.urls")),
     path("cart/", include("bagel_shop.apps.cart.urls")),
     path("checkout/", include("bagel_shop.apps.checkout.urls")),
+    path("drops/", include("bagel_shop.apps.drops.urls")),
     path("orders/", include("bagel_shop.apps.orders.urls")),
     path("blog/", include("bagel_shop.apps.blog.urls")),
     path("payments/", include("bagel_shop.apps.payments.urls")),

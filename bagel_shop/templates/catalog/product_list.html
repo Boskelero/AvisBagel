@@ -1,15 +1,33 @@
 {% extends "base.html" %}
 {% load i18n core_extras %}
 
-{% block title %}{% trans "Menu" %} | {{ SITE_NAME }}{% endblock %}
+{% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{% trans "Menu" %} | {{ SITE_NAME }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="display-6 fw-bold mb-1">{% trans "Our menu" %}</h1>
-        <p class="text-muted mb-0">{% trans "Choose from daily bagels, spreads, and bakery specials." %}</p>
+        <p class="text-muted mb-0">{% trans "Browse our bagels and seasonal specials. Availability changes with each Drop." %}</p>
     </div>
 </div>
+
+{% if featured_drop %}
+    <div class="alert {% if active_drop %}alert-success{% else %}alert-warning{% endif %} rounded-4 mb-4">
+        <strong>{{ featured_drop.name }}</strong> —
+        {% if featured_drop.current_state == 'live' %}
+            {% blocktrans with remaining=featured_drop.remaining_bagels %}Ordering is open. {{ remaining }} bagels remain.{% endblocktrans %}
+            <a href="{% url 'drops:order' %}" class="btn btn-sm btn-dark ms-2">{% trans "Build order" %}</a>
+        {% elif featured_drop.current_state == 'sold_out' %}
+            {% trans "This Drop is sold out. The full menu remains available to browse." %}
+        {% else %}
+            {% trans "The next Drop is not open yet. You can browse the full menu below." %}
+        {% endif %}
+    </div>
+{% else %}
+    <div class="alert alert-light border rounded-4 mb-4">
+        {% trans "There is no active Drop right now. Browse the menu and subscribe for the next opening." %}
+    </div>
+{% endif %}
 
 {% for category in categories %}
     <section class="mb-5">
@@ -27,7 +45,13 @@
                             <h3 class="h6 fw-bold">{{ product.name_i18n }}</h3>
                             <p class="text-muted small mb-2">{{ product.description_i18n|truncatechars:85 }}</p>
                             <p class="fw-semibold mb-2">{{ product.price_cents|shekels }}</p>
+                            {% if not active_drop or not product.current_drop_entries %}
+                                <p class="menu-product-status mb-2">
+                                    {% if featured_drop.current_state == 'scheduled' and product.current_drop_entries %}{% trans "Included in the next Drop" %}{% else %}{% trans "Available in selected Drops" %}{% endif %}
+                                </p>
+                            {% endif %}
                             <div class="mt-auto d-flex gap-2">
+                                {% if active_drop and product.current_drop_entries %}
                                 <a href="{{ product.get_absolute_url }}" class="btn btn-outline-dark btn-sm flex-grow-1">{% trans "Details" %}</a>
                                 <form method="post" action="{% url 'cart:add_product' product.id %}" class="flex-grow-1"
                                       hx-post="{% url 'cart:add_product' product.id %}"
@@ -37,6 +61,9 @@
                                     <input type="hidden" name="quantity" value="1">
                                     <button class="btn btn-accent btn-sm w-100" type="submit">{% trans "Add" %}</button>
                                 </form>
+                                {% else %}
+                                    <a href="{{ product.get_absolute_url }}" class="btn btn-outline-dark btn-sm w-100">{% trans "View details" %}</a>
+                                {% endif %}
                             </div>
                         </div>
                     </article>

@@ -1,0 +1,33 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "SEO and page metadata" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="mb-4">
+    <h1 class="display-6 fw-bold mb-1">{% trans "SEO & page metadata" %}</h1>
+    <p class="text-muted mb-0">{% trans "Control how the main website pages appear in browser tabs, search results, and link previews." %}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
+    <div class="row g-4">
+        {% for form in formset %}
+        <div class="col-xl-6">
+            <section class="seo-page-card bg-white border rounded-4 p-4 h-100">
+                {{ form.id }}
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                    <div><span class="text-uppercase small fw-bold text-muted">{% trans "Static page" %}</span><h2 class="h4 fw-bold mb-0">{{ form.instance.get_page_key_display }}</h2></div>
+                    <span class="badge text-bg-light border">/{{ form.instance.page_key }}/</span>
+                </div>
+                <div class="mb-3"><label class="form-label fw-semibold" for="{{ form.meta_title.id_for_label }}">{{ form.meta_title.label }}</label>{{ form.meta_title }}<div class="form-text">{% trans "Recommended: about 50–60 characters." %}</div>{% for error in form.meta_title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+                <div><label class="form-label fw-semibold" for="{{ form.meta_description.id_for_label }}">{{ form.meta_description.label }}</label>{{ form.meta_description }}<div class="form-text">{% trans "Recommended: about 140–160 characters." %}</div>{% for error in form.meta_description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
+            </section>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="sticky-bottom py-3 mt-2"><button class="btn btn-accent btn-lg shadow" type="submit">{% trans "Save page metadata" %}</button></div>
+</form>
+{% endblock %}

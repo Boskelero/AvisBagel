@@ -37,6 +37,7 @@ class Order(models.Model):
     ]
 
     number = models.CharField(max_length=24, unique=True, db_index=True)
+    checkout_token = models.UUIDField(unique=True, null=True, blank=True, editable=False)
     customer_name = models.CharField(max_length=160)
     email = models.EmailField()
     phone = models.CharField(max_length=40)
@@ -52,6 +53,11 @@ class Order(models.Model):
     total_cents = models.PositiveIntegerField(default=0)
     currency = models.CharField(max_length=3, default="ILS")
     notes = models.TextField(blank=True)
+    drop = models.ForeignKey(
+        "drops.Drop", on_delete=models.PROTECT, related_name="orders", null=True, blank=True
+    )
+    bagel_quantity = models.PositiveIntegerField(default=0)
+    discount_cents = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

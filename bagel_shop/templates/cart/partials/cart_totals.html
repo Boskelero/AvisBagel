@@ -9,6 +9,18 @@
             <span>{% trans "Estimated total" %}</span>
             <strong>{{ estimated_total_cents|shekels }}</strong>
         </div>
-        <a href="{% url 'checkout:checkout' %}" class="btn btn-accent w-100 {% if not lines %}disabled{% endif %}">{% trans "Proceed to checkout" %}</a>
+        {% if discount_cents %}
+            <div class="d-flex justify-content-between text-success mb-3">
+                <span>{% trans "Bagel deal savings" %}</span>
+                <strong>−{{ discount_cents|shekels }}</strong>
+            </div>
+        {% endif %}
+        {% if drop %}<p class="small text-muted">{{ drop.name }} · {{ bagel_quantity }}/{{ drop.max_bagels_per_order }} {% trans "bagels" %}</p>{% endif %}
+        {% if has_unavailable_items %}<p class="small text-danger">{% trans "Remove unavailable items before checkout." %}</p>{% endif %}
+        {% if lines and not drop_is_open %}<p class="small text-danger">{% trans "This Drop is not accepting orders." %}</p>{% endif %}
+        {% if lines and not has_bagels %}<p class="small text-danger">{% trans "Add at least one bagel before checkout." %}</p>{% endif %}
+        {% if exceeds_order_cap %}<p class="small text-danger">{% blocktrans with cap=drop.max_bagels_per_order %}This Drop allows a maximum of {{ cap }} bagels per order.{% endblocktrans %}</p>{% endif %}
+        {% if exceeds_remaining_capacity %}<p class="small text-danger">{% blocktrans with remaining=drop.remaining_bagels %}Only {{ remaining }} bagels remain. Please reduce your order.{% endblocktrans %}</p>{% endif %}
+        <a href="{% url 'checkout:checkout' %}" class="btn btn-accent w-100 {% if not can_checkout %}disabled{% endif %}" {% if not can_checkout %}aria-disabled="true" tabindex="-1"{% endif %}>{% trans "Proceed to checkout" %}</a>
     </div>
 </div>

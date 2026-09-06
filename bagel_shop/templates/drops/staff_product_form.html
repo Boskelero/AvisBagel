@@ -1,0 +1,7 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+{% block title %}{{ title }} | {{ SITE_NAME }}{% endblock %}
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="display-6 fw-bold">{{ title }}</h1><p class="text-muted">{% trans "Products stay in the catalog; each Drop chooses which ones are available." %}</p></div><a href="{% url 'drops:staff_products' %}" class="btn btn-outline-dark">{% trans "Cancel" %}</a></div>
+<form method="post" enctype="multipart/form-data" class="bg-white border rounded-4 p-4">{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}<div class="row g-3">{% for field in form %}<div class="{% if 'description' in field.name %}col-12{% else %}col-md-6{% endif %}"><label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><button class="btn btn-accent btn-lg mt-4" type="submit">{% trans "Save product" %}</button></form>
+{% endblock %}

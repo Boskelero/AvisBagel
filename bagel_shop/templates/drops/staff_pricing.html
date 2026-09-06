@@ -1,0 +1,7 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Bagel pricing" %} | {{ SITE_NAME }}{% endblock %}
+{% block staff_content %}
+<div class="mb-4"><h1 class="display-6 fw-bold mb-1">{% trans "Bagel deal pricing" %}</h1><p class="text-muted">{% trans "The system automatically finds the best combination of these tiers. Specialty upcharges are added afterward." %}</p></div>
+<form method="post" class="bg-white border rounded-4 p-4">{% csrf_token %}{{ formset.management_form }}{% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}<div class="table-responsive"><table class="table align-middle"><thead><tr><th>{% trans "Bagel quantity" %}</th><th>{% trans "Price" %}</th><th>{% trans "Active" %}</th><th>{% trans "Delete" %}</th></tr></thead><tbody>{% for form in formset %}<tr><td>{{ form.id }}{{ form.quantity }}{{ form.quantity.errors }}</td><td>{{ form.price_ils }}{{ form.price_ils.errors }}</td><td>{{ form.is_active }}</td><td>{{ form.DELETE }}</td></tr>{% endfor %}</tbody></table></div><button class="btn btn-accent" type="submit">{% trans "Save pricing" %}</button></form>
+{% endblock %}

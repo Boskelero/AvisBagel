@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n core_extras %}
+
+{% block title %}{% trans "Order this Drop" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="mb-4">
+    <span class="text-uppercase small fw-bold text-muted">{% trans "Now open" %}</span>
+    <h1 class="display-6 fw-bold mb-2">{{ drop.name }}</h1>
+    <p class="mb-1">{% trans "Pickup" %}: <strong>{{ drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ drop.pickup_ends_at|date:"H:i" }}</strong></p>
+    <p class="text-muted">{{ drop.pickup_location }} · {% blocktrans with remaining=drop.remaining_bagels cap=drop.max_bagels_per_order %}{{ remaining }} bagels remain; maximum {{ cap }} per order.{% endblocktrans %}</p>
+</section>
+
+{{ pricing_tiers|json_script:"bagel-price-tiers" }}
+<form method="post" data-drop-order-form data-max-bagels="{{ drop.max_bagels_per_order }}" data-remaining-bagels="{{ drop.remaining_bagels }}">
+    {% csrf_token %}
+    <h2 class="h4 fw-bold mb-3">{% trans "Choose your bagels" %}</h2>
+    <div class="row g-3 mb-4">
+        {% for entry in bagel_entries %}
+            <div class="col-6 col-lg-4">
+                <article class="card h-100 border-0 shadow-sm product-card">
+                    {% if entry.product.primary_image %}<img src="{{ entry.product.primary_image.image.url }}" class="card-img-top" alt="{{ entry.product.name_i18n }}">{% endif %}
+                    <div class="card-body d-flex flex-column">
+                        <h2 class="h6 fw-bold">{{ entry.product.name_i18n }}</h2>
+                        <p class="small text-muted mb-2">{% if entry.product.specialty_upcharge_cents %}+{{ entry.product.specialty_upcharge_cents|shekels }} {% trans "specialty upcharge" %}{% else %}{% trans "Standard bagel" %}{% endif %}</p>
+                        <label class="form-label small mt-auto" for="product_{{ entry.product_id }}">{% trans "Quantity" %}</label>
+                        <input class="form-control" id="product_{{ entry.product_id }}" name="product_{{ entry.product_id }}" type="number" inputmode="numeric" min="0" max="{{ drop.max_bagels_per_order }}" value="0" data-bagel-quantity data-upcharge-cents="{{ entry.product.specialty_upcharge_cents }}">
+                    </div>
+                </article>
+            </div>
+        {% empty %}<p>{% trans "No bagels have been added to this Drop yet." %}</p>{% endfor %}
+    </div>
+    {% if extra_entries %}
+        <h2 class="h4 fw-bold mb-3">{% trans "Add something extra" %}</h2>
+        <div class="row g-3 mb-4">
+            {% for entry in extra_entries %}
+                <div class="col-6 col-lg-4"><article class="card h-100 border-0 shadow-sm product-card"><div class="card-body d-flex flex-column">
+                    <h2 class="h6 fw-bold">{{ entry.product.name_i18n }}</h2>
+                    <p class="small text-muted">{{ entry.price_override_cents|default:entry.product.price_cents|shekels }}</p>
+                    <label class="form-label small mt-auto" for="product_{{ entry.product_id }}">{% trans "Quantity" %}</label>
+                    <input class="form-control" id="product_{{ entry.product_id }}" name="product_{{ entry.product_id }}" type="number" inputmode="numeric" min="0" max="20" value="0" data-extra-quantity data-unit-price-cents="{{ entry.price_override_cents|default:entry.product.price_cents }}">
+                </div></article></div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="sticky-bottom bg-white border rounded-4 shadow p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div><strong><span data-selected-bagels>0</span>/{{ drop.max_bagels_per_order }}</strong> {% trans "bagels selected" %}<br><small class="text-success" data-order-savings></small></div>
+        <div class="text-end"><strong class="h5 d-block mb-1" data-order-total>₪0.00</strong><button class="btn btn-accent btn-lg" type="submit" data-order-submit disabled>{% trans "Review order" %}</button></div>
+    </div>
+</form>
+{% endblock %}

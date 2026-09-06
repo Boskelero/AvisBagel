@@ -7,6 +7,12 @@
 <section class="mb-4">
     <h1 class="display-6 fw-bold mb-2">{% trans "Checkout" %}</h1>
     <p class="text-muted mb-0">{% trans "Complete your details to place the order." %}</p>
+    {% if drop %}
+        <div class="mt-3 p-3 bg-light border rounded-4">
+            <strong>{{ drop.name }}</strong><br>
+            <span class="text-muted">{% trans "Pickup" %}: {{ drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ drop.pickup_ends_at|date:"H:i" }} · {{ drop.pickup_location }}</span>
+        </div>
+    {% endif %}
 </section>
 
 <div class="row g-4">
@@ -29,47 +35,6 @@
                     <label class="form-label" for="id_email">{{ form.email.label }}</label>
                     {{ form.email }}
                     {{ form.email.errors }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="id_fulfillment_type">{{ form.fulfillment_type.label }}</label>
-                    {{ form.fulfillment_type }}
-                    {{ form.fulfillment_type.errors }}
-                </div>
-                <div class="col-md-6 pickup-field">
-                    <label class="form-label" for="id_pickup_time_slot">{{ form.pickup_time_slot.label }}</label>
-                    {{ form.pickup_time_slot }}
-                    {{ form.pickup_time_slot.errors }}
-                </div>
-            </div>
-
-            <div class="delivery-fields mt-4">
-                <h2 class="h6 fw-bold mb-3">{% trans "Delivery address" %}</h2>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label" for="id_address_line1">{{ form.address_line1.label }}</label>
-                        {{ form.address_line1 }}
-                        {{ form.address_line1.errors }}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="id_address_line2">{{ form.address_line2.label }}</label>
-                        {{ form.address_line2 }}
-                        {{ form.address_line2.errors }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="id_city">{{ form.city.label }}</label>
-                        {{ form.city }}
-                        {{ form.city.errors }}
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label" for="id_postal_code">{{ form.postal_code.label }}</label>
-                        {{ form.postal_code }}
-                        {{ form.postal_code.errors }}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label" for="id_delivery_notes">{{ form.delivery_notes.label }}</label>
-                        {{ form.delivery_notes }}
-                        {{ form.delivery_notes.errors }}
-                    </div>
                 </div>
             </div>
 
@@ -102,6 +67,13 @@
                         </li>
                     {% endfor %}
                 </ul>
+                {% if discount_cents %}
+                    <div class="d-flex justify-content-between text-success mb-2">
+                        <span>{% trans "Bagel deal savings" %}</span>
+                        <strong>−{{ discount_cents|shekels }}</strong>
+                    </div>
+                {% endif %}
+                <div class="small text-muted mb-2">{% blocktrans with count=bagel_quantity %}{{ count }} bagels in this order{% endblocktrans %}</div>
                 <hr>
                 <div class="d-flex justify-content-between">
                     <span>{% trans "Total" %}</span>

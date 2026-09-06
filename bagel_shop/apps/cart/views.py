@@ -36,8 +36,11 @@ def add_product(request, product_id):
     except (TypeError, ValueError):
         quantity = 1
 
-    add_product_to_cart(request, product, quantity=quantity)
-    messages.success(request, _("Product added to cart."))
+    try:
+        add_product_to_cart(request, product, quantity=quantity)
+        messages.success(request, _("Product added to cart."))
+    except ValueError as exc:
+        messages.error(request, str(exc))
 
     if request.headers.get("HX-Request"):
         return _render_htmx_update(request)

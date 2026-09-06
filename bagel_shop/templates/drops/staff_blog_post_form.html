@@ -1,0 +1,41 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div><h1 class="display-6 fw-bold mb-1">{{ title }}</h1><p class="text-muted mb-0">{% trans "Save as a draft until the article is ready for customers." %}</p></div>
+    <a href="{% url 'drops:staff_blog_posts' %}" class="btn btn-outline-dark">{% trans "All blog posts" %}</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="bg-white border rounded-4 p-4">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><label class="form-label" for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>{{ form.category }}{{ form.category.errors }}</div>
+        <div class="col-md-4"><label class="form-label" for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>{{ form.status }}{{ form.status.errors }}</div>
+        <div class="col-md-4"><label class="form-label" for="{{ form.published_at.id_for_label }}">{{ form.published_at.label }}</label>{{ form.published_at }}{{ form.published_at.errors }}</div>
+        <div class="col-12"><label class="form-label" for="{{ form.cover_image.id_for_label }}">{{ form.cover_image.label }}</label>{{ form.cover_image }}{{ form.cover_image.errors }}{% if post.cover_image %}<div class="mt-2"><img src="{{ post.cover_image.url }}" class="staff-blog-cover-preview rounded-3" alt=""></div>{% endif %}</div>
+    </div>
+
+    <div class="row g-4">
+        <section class="col-xl-6">
+            <h2 class="h5 fw-bold mb-3">{% trans "English" %}</h2>
+            <div class="mb-3"><label class="form-label" for="{{ form.title_en.id_for_label }}">{{ form.title_en.label }}</label>{{ form.title_en }}{{ form.title_en.errors }}</div>
+            <div class="mb-3"><label class="form-label" for="{{ form.excerpt_en.id_for_label }}">{{ form.excerpt_en.label }}</label>{{ form.excerpt_en }}{{ form.excerpt_en.errors }}</div>
+            <div><label class="form-label" for="{{ form.content_en.id_for_label }}">{{ form.content_en.label }}</label>{{ form.content_en }}{{ form.content_en.errors }}</div>
+        </section>
+        <section class="col-xl-6">
+            <h2 class="h5 fw-bold mb-3">{% trans "Hebrew" %}</h2>
+            <div class="mb-3"><label class="form-label" for="{{ form.title_he.id_for_label }}">{{ form.title_he.label }}</label>{{ form.title_he }}{{ form.title_he.errors }}</div>
+            <div class="mb-3"><label class="form-label" for="{{ form.excerpt_he.id_for_label }}">{{ form.excerpt_he.label }}</label>{{ form.excerpt_he }}{{ form.excerpt_he.errors }}</div>
+            <div><label class="form-label" for="{{ form.content_he.id_for_label }}">{{ form.content_he.label }}</label>{{ form.content_he }}{{ form.content_he.errors }}</div>
+        </section>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top">
+        <button class="btn btn-accent" type="submit">{% trans "Save blog post" %}</button>
+        <a href="{% url 'drops:staff_blog_posts' %}" class="btn btn-outline-dark">{% trans "Cancel" %}</a>
+    </div>
+</form>
+{% endblock %}

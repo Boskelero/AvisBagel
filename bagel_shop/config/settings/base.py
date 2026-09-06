@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "bagel_shop.apps.pages.apps.PagesConfig",
     "bagel_shop.apps.blog.apps.BlogConfig",
     "bagel_shop.apps.catalog.apps.CatalogConfig",
+    "bagel_shop.apps.drops.apps.DropsConfig",
     "bagel_shop.apps.bundles.apps.BundlesConfig",
     "bagel_shop.apps.accounts.apps.AccountsConfig",
     "bagel_shop.apps.cart.apps.CartConfig",
@@ -86,7 +87,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "he"
+LANGUAGE_CODE = "en"
 LANGUAGES = (
     ("he", _("Hebrew")),
     ("en", _("English")),
@@ -123,7 +124,8 @@ CART_SESSION_ID = "cart"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-SITE_NAME = config("SITE_NAME", default="Avis Bagel")
+SITE_NAME = config("SITE_NAME", default="Abu Avi Bagels")
 SITE_EMAIL = config("SITE_EMAIL", default="hello@avisbagel.com")
-SITE_PHONE = config("SITE_PHONE", default="03-555-4321")
-SITE_ADDRESS = config("SITE_ADDRESS", default="??????? 100, ?? ????")
+SITE_PHONE = config("SITE_PHONE", default="")
+SITE_ADDRESS = config("SITE_ADDRESS", default="Ben Yehuda 69, Tel Aviv")
+SITE_URL = config("SITE_URL", default="http://127.0.0.1:8000")

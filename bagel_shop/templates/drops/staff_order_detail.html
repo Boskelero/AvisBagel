@@ -1,0 +1,71 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n core_extras %}
+
+{% block title %}{{ order.number }} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <a href="{% url 'drops:staff_orders' %}" class="small text-muted text-decoration-none">← {% trans "All orders" %}</a>
+        <h1 class="display-6 fw-bold my-1">{{ order.number }}</h1>
+        <p class="text-muted mb-0">{% trans "Placed" %} {{ order.created_at|date:"l, F j, Y, H:i" }}</p>
+    </div>
+    {% if order.drop %}
+        <a class="btn btn-outline-dark" href="{% url 'drops:staff_detail' order.drop.id %}">{% trans "View Drop" %}</a>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="bg-white border rounded-4 p-4 mb-4">
+            <h2 class="h5 fw-bold mb-3">{% trans "Items" %}</h2>
+            <ul class="list-group list-group-flush">
+                {% for item in order.items.all %}
+                    <li class="list-group-item px-0 d-flex justify-content-between gap-3">
+                        <span>{{ item.quantity }} × {{ item.product_name }}</span>
+                        <strong>{{ item.line_total_cents|shekels }}</strong>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if order.discount_cents %}<div class="d-flex justify-content-between text-success pt-3"><span>{% trans "Bagel deal savings" %}</span><strong>−{{ order.discount_cents|shekels }}</strong></div>{% endif %}
+            <div class="d-flex justify-content-between border-top mt-3 pt-3 h5"><span>{% trans "Total" %}</span><strong>{{ order.total_cents|shekels }}</strong></div>
+        </section>
+
+        {% if order.notes %}
+        <section class="bg-white border rounded-4 p-4">
+            <h2 class="h5 fw-bold">{% trans "Customer notes" %}</h2>
+            <p class="mb-0" style="white-space: pre-wrap">{{ order.notes }}</p>
+        </section>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+        <section class="bg-white border rounded-4 p-4 mb-4">
+            <h2 class="h5 fw-bold mb-3">{% trans "Order status" %}</h2>
+            {% if order.drop %}
+            <form method="post" action="{% url 'drops:staff_order_status' order.drop.id order.id %}">
+                {% csrf_token %}<input type="hidden" name="return" value="order">
+                <select class="form-select mb-2" name="status">{% for value, label in status_choices %}<option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+                <button class="btn btn-accent w-100" type="submit">{% trans "Update status" %}</button>
+            </form>
+            {% else %}<span class="badge text-bg-secondary">{{ order.get_status_display }}</span>{% endif %}
+            {% if order.status == 'canceled' %}<p class="small text-muted mt-3 mb-0">{% trans "This order's bagel capacity has been returned to the Drop." %}</p>{% endif %}
+        </section>
+
+        <section class="bg-white border rounded-4 p-4 mb-4">
+            <h2 class="h5 fw-bold mb-3">{% trans "Customer" %}</h2>
+            <p class="fw-semibold mb-1">{{ order.customer_name }}</p>
+            <p class="mb-1"><a href="tel:{{ order.phone }}">{{ order.phone }}</a></p>
+            <p class="mb-0"><a href="mailto:{{ order.email }}">{{ order.email }}</a></p>
+        </section>
+
+        {% if order.drop %}
+        <section class="bg-white border rounded-4 p-4">
+            <h2 class="h5 fw-bold mb-3">{% trans "Pickup" %}</h2>
+            <p class="mb-1"><strong>{{ order.drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ order.drop.pickup_ends_at|date:"H:i" }}</strong></p>
+            <p class="text-muted mb-0">{{ order.drop.pickup_location }}</p>
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

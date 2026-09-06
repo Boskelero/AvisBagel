@@ -1,0 +1,42 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Drop dashboard" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold mb-1">{% trans "Drop dashboard" %}</h1>
+        <p class="text-muted mb-0">{% trans "Capacity and sales at a glance." %}</p>
+    </div>
+    <div class="d-flex gap-2"><a href="{% url 'drops:staff_customers' %}" class="btn btn-outline-dark">{% trans "Customers" %}</a><a href="{% url 'drops:staff_create' %}" class="btn btn-accent">{% trans "Create Drop" %}</a></div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><a href="{% url 'drops:staff_subscribers' %}" class="text-decoration-none text-dark"><div class="bg-white border rounded-4 p-3"><strong class="h3 d-block">{{ subscriber_count }}</strong><span class="text-muted">{% trans "Drop subscribers" %}</span></div></a></div>
+    <div class="col-6 col-md-3"><a href="{% url 'drops:staff_inquiries' %}" class="text-decoration-none text-dark"><div class="bg-white border rounded-4 p-3"><strong class="h3 d-block">{{ new_inquiry_count }}</strong><span class="text-muted">{% trans "New inquiries" %}</span></div></a></div>
+</div>
+<div class="row g-3">
+    {% for drop in drops %}
+        <div class="col-md-6 col-xl-4">
+            <article class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h2 class="h5 fw-bold">{{ drop.name }}</h2>
+                        <span class="badge {% if drop.current_state == 'live' %}text-bg-success{% elif drop.current_state == 'sold_out' %}text-bg-danger{% else %}text-bg-dark{% endif %}">{{ drop.current_state_label }}</span>
+                    </div>
+                    <p class="text-muted small">{{ drop.pickup_starts_at|date:"D, M j, H:i" }}</p>
+                    <div class="row text-center g-2 mb-3">
+                        <div class="col-4"><div class="border rounded-3 p-2"><strong class="d-block">{{ drop.bagel_capacity }}</strong><small>{% trans "Capacity" %}</small></div></div>
+                        <div class="col-4"><div class="border rounded-3 p-2"><strong class="d-block">{{ drop.reserved_bagels }}</strong><small>{% trans "Sold" %}</small></div></div>
+                        <div class="col-4"><div class="border rounded-3 p-2"><strong class="d-block">{{ drop.remaining_bagels }}</strong><small>{% trans "Left" %}</small></div></div>
+                    </div>
+                    <div class="d-flex gap-2"><a href="{% url 'drops:staff_detail' drop.id %}" class="btn btn-outline-dark flex-grow-1">{% trans "View production" %}</a><form method="post" action="{% url 'drops:staff_duplicate' drop.id %}">{% csrf_token %}<button class="btn btn-light border" type="submit">{% trans "Duplicate" %}</button></form></div>
+                </div>
+            </article>
+        </div>
+    {% empty %}
+        <p>{% trans "No Drops have been created yet." %}</p>
+    {% endfor %}
+</div>
+{% include "drops/includes/pagination.html" with page_obj=drops %}
+{% endblock %}

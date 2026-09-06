@@ -1,0 +1,45 @@
+from django.urls import path
+
+from . import views
+
+app_name = "drops"
+
+urlpatterns = [
+    path("order/", views.order_current_drop, name="order"),
+    path("staff/", views.staff_dashboard, name="staff_dashboard"),
+    path("staff/orders/", views.staff_orders, name="staff_orders"),
+    path("staff/orders.xlsx", views.staff_orders_excel, name="staff_orders_excel"),
+    path("staff/orders/<int:order_id>/", views.staff_order_detail, name="staff_order_detail"),
+    path("staff/customers/", views.staff_customers, name="staff_customers"),
+    path("staff/customers.xlsx", views.staff_customers_excel, name="staff_customers_excel"),
+    path("staff/customers/<int:order_id>/", views.staff_customer_detail, name="staff_customer_detail"),
+    path("staff/products/", views.staff_products, name="staff_products"),
+    path("staff/products.xlsx", views.staff_products_excel, name="staff_products_excel"),
+    path("staff/products/new/", views.staff_product_create, name="staff_product_create"),
+    path("staff/products/<int:product_id>/", views.staff_product_edit, name="staff_product_edit"),
+    path("staff/blog/", views.staff_blog_posts, name="staff_blog_posts"),
+    path("staff/blog/new/", views.staff_blog_post_create, name="staff_blog_post_create"),
+    path("staff/blog/<int:post_id>/", views.staff_blog_post_edit, name="staff_blog_post_edit"),
+    path("staff/categories/", views.staff_categories, name="staff_categories"),
+    path("staff/categories/<int:category_id>/", views.staff_categories, name="staff_category_edit"),
+    path("staff/pricing/", views.staff_pricing, name="staff_pricing"),
+    path("staff/seo/", views.staff_seo, name="staff_seo"),
+    path("staff/inquiries/", views.staff_inquiries, name="staff_inquiries"),
+    path("staff/inquiries.xlsx", views.staff_inquiries_excel, name="staff_inquiries_excel"),
+    path("staff/inquiries/contact/<int:inquiry_id>/status/", views.staff_contact_inquiry_status, name="staff_contact_inquiry_status"),
+    path("staff/inquiries/<int:inquiry_id>/status/", views.staff_inquiry_status, name="staff_inquiry_status"),
+    path("staff/subscribers/", views.staff_subscribers, name="staff_subscribers"),
+    path("staff/subscribers.xlsx", views.staff_subscribers_excel, name="staff_subscribers_excel"),
+    path("staff/subscribers/<int:subscriber_id>/toggle/", views.staff_subscriber_toggle, name="staff_subscriber_toggle"),
+    path("staff/new/", views.staff_drop_create, name="staff_create"),
+    path("staff/<int:drop_id>/", views.staff_drop_detail, name="staff_detail"),
+    path("staff/<int:drop_id>/edit/", views.staff_drop_edit, name="staff_edit"),
+    path("staff/<int:drop_id>/delete/", views.staff_drop_delete, name="staff_delete"),
+    path("staff/<int:drop_id>/duplicate/", views.staff_drop_duplicate, name="staff_duplicate"),
+    path("staff/<int:drop_id>/action/", views.staff_drop_action, name="staff_action"),
+    path("staff/<int:drop_id>/orders/<int:order_id>/status/", views.staff_order_status, name="staff_order_status"),
+    path("staff/<int:drop_id>/orders.csv", views.staff_drop_csv, name="staff_csv"),
+    path("staff/<int:drop_id>/orders.xlsx", views.staff_drop_excel, name="staff_excel"),
+    path("staff/<int:drop_id>/production/", views.staff_production_sheet, name="staff_production_sheet"),
+    path("staff/<int:drop_id>/announcement/", views.staff_drop_announcement, name="staff_announcement"),
+]

@@ -1,10 +1,14 @@
 ﻿{% load i18n %}
+{% load static %}
 <nav class="site-nav sticky-top pt-3">
     <div class="container">
         <div class="site-nav-shell navbar navbar-expand-xl">
             <a class="site-brand" href="{% url 'pages:home' %}">
-                <span class="site-brand-main">AVIS BAGEL</span>
-                <span class="site-brand-sub">{% trans "Bakery" %}</span>
+                <img class="site-brand-badge" src="{% static 'images/abu-avi-chef-badge.png' %}" alt="" width="68" height="68">
+                <span class="site-brand-wordmark">
+                    <span class="site-brand-main">ABU AVI</span>
+                    <span class="site-brand-sub">{% trans "Bagels" %}</span>
+                </span>
             </a>
 
             <button class="navbar-toggler site-nav-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -15,7 +19,6 @@
                 <ul class="navbar-nav site-nav-links mx-auto mb-3 mb-xl-0">
                     <li class="nav-item"><a class="nav-link" href="{% url 'pages:home' %}">{% trans "Home" %}</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'catalog:menu' %}">{% trans "Menu" %}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'bundles:list' %}">{% trans "Bundles" %}</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'blog:post_list' %}">{% trans "Blog" %}</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'pages:about' %}">{% trans "About" %}</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'pages:contact' %}">{% trans "Contact" %}</a></li>
@@ -40,7 +43,7 @@
                         {% include "cart/partials/cart_count.html" with item_count=cart_item_count %}
                     </a>
 
-                    <a href="{% url 'checkout:checkout' %}" class="btn btn-sm site-nav-order">{% trans "Order now" %}</a>
+                    {% if request.user.is_staff %}<a href="{% url 'drops:staff_dashboard' %}" class="btn btn-sm btn-dark">{% trans "Staff" %}</a>{% endif %}
                 </div>
             </div>
         </div>

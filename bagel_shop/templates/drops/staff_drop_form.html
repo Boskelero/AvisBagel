@@ -1,0 +1,26 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><h1 class="display-6 fw-bold mb-1">{{ title }}</h1><p class="text-muted mb-0">{% trans "Schedule ordering, pickup, capacity, and this Drop's menu." %}</p></div>
+    <a href="{% if drop %}{% url 'drops:staff_detail' drop.id %}{% else %}{% url 'drops:staff_dashboard' %}{% endif %}" class="btn btn-outline-dark">{% trans "Cancel" %}</a>
+</div>
+<form method="post" class="bg-white border rounded-4 p-4">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="row g-3">
+        {% for field in form %}
+            <div class="{% if field.name == 'products' %}col-12{% else %}col-md-6{% endif %}">
+                <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if field.name == 'products' %}<div class="row row-cols-1 row-cols-md-3 g-2 border rounded-3 p-3">{{ field }}</div>{% else %}{{ field }}{% endif %}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+    <button class="btn btn-accent btn-lg mt-4" type="submit">{% trans "Save Drop" %}</button>
+</form>
+{% endblock %}

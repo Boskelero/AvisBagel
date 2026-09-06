@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "About" %} | {{ SITE_NAME }}{% endblock %}
+{% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{% trans "About" %} | {{ SITE_NAME }}{% endif %}{% endblock %}
 
 {% block content %}
 <section class="row g-4 align-items-center">

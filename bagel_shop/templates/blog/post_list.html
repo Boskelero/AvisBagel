@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Blog" %} | {{ SITE_NAME }}{% endblock %}
+{% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{% trans "Blog" %} | {{ SITE_NAME }}{% endif %}{% endblock %}
 
 {% block content %}
 <section class="mb-4">

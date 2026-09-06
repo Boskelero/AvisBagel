@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block site_nav %}
+<nav class="staff-topbar border-bottom bg-dark text-white">
+    <div class="container py-3 d-flex justify-content-between align-items-center">
+        <a href="{% url 'drops:staff_dashboard' %}" class="text-white text-decoration-none fw-bold">ABU AVI <span class="fw-normal text-white-50">STAFF</span></a>
+        <div class="d-flex gap-2 align-items-center"><a href="{% url 'pages:home' %}" class="btn btn-sm btn-outline-light">{% trans "View store" %}</a><form method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button class="btn btn-sm btn-light" type="submit">{% trans "Log out" %}</button></form></div>
+    </div>
+</nav>
+{% endblock %}
+{% block site_footer %}{% endblock %}
+
+{% block content %}
+<div class="staff-layout">
+    <aside class="staff-sidebar-column">
+        <nav class="staff-sidebar" aria-label="{% trans 'Staff navigation' %}">
+            <div class="staff-sidebar-title">{% trans "Workspace" %}</div>
+            <div class="staff-nav-group">
+                <div class="staff-nav-label">{% trans "Operations" %}</div>
+                <a href="{% url 'drops:staff_dashboard' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_dashboard' or request.resolver_match.url_name == 'staff_create' or request.resolver_match.url_name == 'staff_detail' or request.resolver_match.url_name == 'staff_edit' %}is-active{% endif %}" {% if request.resolver_match.url_name == 'staff_dashboard' %}aria-current="page"{% endif %}><span class="staff-nav-icon" aria-hidden="true">D</span><span>{% trans "Drops" %}</span></a>
+                <a href="{% url 'drops:staff_orders' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_orders' or request.resolver_match.url_name == 'staff_order_detail' %}is-active{% endif %}" {% if request.resolver_match.url_name == 'staff_orders' or request.resolver_match.url_name == 'staff_order_detail' %}aria-current="page"{% endif %}><span class="staff-nav-icon" aria-hidden="true">O</span><span>{% trans "Orders" %}</span></a>
+            </div>
+            <div class="staff-nav-group">
+                <div class="staff-nav-label">{% trans "Catalog" %}</div>
+                <a href="{% url 'drops:staff_products' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_products' or request.resolver_match.url_name == 'staff_product_create' or request.resolver_match.url_name == 'staff_product_edit' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">P</span><span>{% trans "Products" %}</span></a>
+                <a href="{% url 'drops:staff_categories' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_categories' or request.resolver_match.url_name == 'staff_category_edit' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">C</span><span>{% trans "Categories" %}</span></a>
+                <a href="{% url 'drops:staff_pricing' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_pricing' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">₪</span><span>{% trans "Pricing" %}</span></a>
+            </div>
+            <div class="staff-nav-group">
+                <div class="staff-nav-label">{% trans "Website" %}</div>
+                <a href="{% url 'drops:staff_blog_posts' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_blog_posts' or request.resolver_match.url_name == 'staff_blog_post_create' or request.resolver_match.url_name == 'staff_blog_post_edit' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">B</span><span>{% trans "Blog posts" %}</span></a>
+                <a href="{% url 'drops:staff_seo' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_seo' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">S</span><span>{% trans "SEO & pages" %}</span></a>
+            </div>
+            <div class="staff-nav-group">
+                <div class="staff-nav-label">{% trans "Audience" %}</div>
+                <a href="{% url 'drops:staff_customers' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_customers' or request.resolver_match.url_name == 'staff_customer_detail' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">C</span><span>{% trans "Customers" %}</span></a>
+                <a href="{% url 'drops:staff_inquiries' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_inquiries' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">I</span><span>{% trans "Inquiries" %}</span></a>
+                <a href="{% url 'drops:staff_subscribers' %}" class="staff-nav-link {% if request.resolver_match.url_name == 'staff_subscribers' %}is-active{% endif %}"><span class="staff-nav-icon" aria-hidden="true">S</span><span>{% trans "Subscribers" %}</span></a>
+            </div>
+        </nav>
+    </aside>
+    <section class="staff-main">{% block staff_content %}{% endblock %}</section>
+</div>
+{% endblock %}

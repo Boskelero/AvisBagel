@@ -1,0 +1,46 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n core_extras %}
+
+{% block title %}{{ drop.name }} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div><h1 class="display-6 fw-bold mb-1">{{ drop.name }}</h1><p class="text-muted mb-0">{{ drop.pickup_starts_at|date:"l, F j, H:i" }} · {{ drop.pickup_location }}</p></div>
+    <div class="d-flex flex-wrap gap-2"><a href="{% url 'drops:staff_announcement' drop.id %}" class="btn btn-outline-dark">{% trans "Announce" %}</a><a href="{% url 'drops:staff_production_sheet' drop.id %}" class="btn btn-outline-dark">{% trans "Print production" %}</a><a href="{% url 'drops:staff_excel' drop.id %}" class="btn btn-outline-dark">{% trans "Export Excel" %}</a><a href="{% url 'drops:staff_edit' drop.id %}" class="btn btn-accent">{% trans "Edit Drop" %}</a><a href="{% url 'drops:staff_delete' drop.id %}" class="btn btn-outline-danger">{% trans "Delete" %}</a></div>
+</div>
+<div class="bg-white border rounded-4 p-3 mb-4">
+    <div class="d-flex flex-wrap gap-2 align-items-end">
+        <form method="post" action="{% url 'drops:staff_action' drop.id %}">{% csrf_token %}<input type="hidden" name="action" value="{% if drop.status == 'published' %}close{% else %}publish{% endif %}"><button class="btn {% if drop.status == 'published' %}btn-outline-danger{% else %}btn-success{% endif %}" type="submit">{% if drop.status == 'published' %}{% trans "Close ordering" %}{% else %}{% trans "Publish Drop" %}{% endif %}</button></form>
+        <form method="post" action="{% url 'drops:staff_action' drop.id %}" class="d-flex gap-2 align-items-end">{% csrf_token %}<input type="hidden" name="action" value="extend"><div><label class="form-label small mb-1">{% trans "Extend by hours" %}</label><input class="form-control form-control-sm" type="number" name="hours" value="1" min="1" max="168"></div><button class="btn btn-outline-dark" type="submit">{% trans "Extend" %}</button></form>
+        <form method="post" action="{% url 'drops:staff_action' drop.id %}" class="d-flex gap-2 align-items-end">{% csrf_token %}<input type="hidden" name="action" value="capacity"><div><label class="form-label small mb-1">{% trans "Total capacity" %}</label><input class="form-control form-control-sm" type="number" name="capacity" value="{{ drop.bagel_capacity }}" min="{{ drop.reserved_bagels }}"></div><button class="btn btn-outline-dark" type="submit">{% trans "Update" %}</button></form>
+        <form method="post" action="{% url 'drops:staff_duplicate' drop.id %}" class="ms-md-auto">{% csrf_token %}<button class="btn btn-light border" type="submit">{% trans "Duplicate for next week" %}</button></form>
+    </div>
+</div>
+<div class="row g-3 mb-4 text-center">
+    <div class="col-4"><div class="bg-white border rounded-4 p-3"><span class="h3 d-block">{{ drop.bagel_capacity }}</span>{% trans "Capacity" %}</div></div>
+    <div class="col-4"><div class="bg-white border rounded-4 p-3"><span class="h3 d-block">{{ drop.reserved_bagels }}</span>{% trans "Sold" %}</div></div>
+    <div class="col-4"><div class="bg-white border rounded-4 p-3"><span class="h3 d-block">{{ drop.remaining_bagels }}</span>{% trans "Remaining" %}</div></div>
+</div>
+<div class="row g-4 mb-5">
+    <div class="col-md-6"><div class="bg-white border rounded-4 p-4"><h2 class="h5">{% trans "Bagel production" %}</h2><ul class="list-group list-group-flush">{% for row in bagel_totals %}<li class="list-group-item d-flex justify-content-between"><span>{{ row.product_name }}</span><strong>{{ row.quantity }}</strong></li>{% empty %}<li class="list-group-item text-muted">{% trans "No production orders yet." %}</li>{% endfor %}</ul></div></div>
+    <div class="col-md-6"><div class="bg-white border rounded-4 p-4"><h2 class="h5">{% trans "Extras" %}</h2><ul class="list-group list-group-flush">{% for row in extra_totals %}<li class="list-group-item d-flex justify-content-between"><span>{{ row.product_name }}</span><strong>{{ row.quantity }}</strong></li>{% empty %}<li class="list-group-item text-muted">{% trans "No extras yet." %}</li>{% endfor %}</ul></div></div>
+</div>
+<h2 class="h4 fw-bold">{% trans "Orders" %}</h2>
+<div class="table-responsive bg-white border rounded-4">
+    <table class="table align-middle mb-0">
+        <thead><tr><th>{% trans "Order" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Bagels" %}</th><th>{% trans "Status" %}</th><th>{% trans "Total" %}</th></tr></thead>
+        <tbody>
+        {% for order in orders %}
+            <tr>
+                <td><a href="{% url 'drops:staff_order_detail' order.id %}">{{ order.number }}</a></td>
+                <td>{{ order.customer_name }} {% if order.customer_order_count > 1 %}<span class="badge text-bg-success">{% trans "Repeat" %} · {{ order.customer_order_count }}</span>{% endif %}<br><small class="text-muted">{{ order.phone }} · {{ order.email }}</small></td>
+                <td>{{ order.bagel_quantity }}</td>
+                <td><form method="post" action="{% url 'drops:staff_order_status' drop.id order.id %}" class="d-flex gap-1">{% csrf_token %}<select class="form-select form-select-sm" name="status">{% for value, label in order.STATUS_CHOICES %}{% if value != 'draft' %}<option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}</select><button class="btn btn-sm btn-outline-dark" type="submit">{% trans "Save" %}</button></form></td>
+                <td>{{ order.total_cents|shekels }}</td>
+            </tr>
+        {% empty %}<tr><td colspan="5" class="text-muted">{% trans "No orders yet." %}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "drops/includes/pagination.html" %}
+{% endblock %}

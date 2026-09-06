@@ -1,0 +1,56 @@
+{% extends "drops/staff_base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Blog posts" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block staff_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold mb-1">{% trans "Blog posts" %}</h1>
+        <p class="text-muted mb-0">{% trans "Write stories, baking updates, and Drop announcements." %}</p>
+    </div>
+    <a href="{% url 'drops:staff_blog_post_create' %}" class="btn btn-accent">{% trans "Add blog post" %}</a>
+</div>
+
+<form method="get" class="bg-white border rounded-4 p-3 mb-4">
+    <div class="row g-2">
+        <div class="col-lg-7">
+            <label for="blog-search" class="form-label small">{% trans "Search" %}</label>
+            <input id="blog-search" class="form-control" type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search titles or summaries' %}">
+        </div>
+        <div class="col-lg-3">
+            <label for="blog-status" class="form-label small">{% trans "Status" %}</label>
+            <select id="blog-status" class="form-select" name="status">
+                <option value="">{% trans "All statuses" %}</option>
+                {% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-2 d-flex align-items-end"><button class="btn btn-dark w-100">{% trans "Apply" %}</button></div>
+    </div>
+</form>
+
+<div class="row g-3">
+    {% for post in posts %}
+    <div class="col-lg-6">
+        <article class="bg-white border rounded-4 p-3 h-100 d-flex gap-3">
+            {% if post.cover_image %}<img src="{{ post.cover_image.url }}" class="staff-blog-thumb rounded-3" alt="">{% else %}<div class="staff-blog-thumb rounded-3 d-grid place-items-center bg-light text-muted" aria-hidden="true">Aa</div>{% endif %}
+            <div class="flex-grow-1 min-width-0">
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <span class="badge {% if post.status == 'published' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ post.get_status_display }}</span>
+                    <small class="text-muted">{{ post.published_at|date:"M j, Y H:i" }}</small>
+                </div>
+                <h2 class="h5 fw-bold mt-2 mb-1">{{ post.title_en|default:post.title_i18n }}</h2>
+                <p class="small text-muted mb-3">{{ post.excerpt_en|default:post.excerpt_or_content_i18n|truncatechars:110 }}</p>
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="{% url 'drops:staff_blog_post_edit' post.id %}" class="btn btn-sm btn-outline-dark">{% trans "Edit" %}</a>
+                    {% if post.status == 'published' %}<a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-light border" target="_blank">{% trans "View post" %}</a>{% endif %}
+                </div>
+            </div>
+        </article>
+    </div>
+    {% empty %}
+    <div class="col-12"><div class="bg-white border rounded-4 p-4 text-muted">{% trans "No blog posts found." %}</div></div>
+    {% endfor %}
+</div>
+{% include "drops/includes/pagination.html" %}
+{% endblock %}

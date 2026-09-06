@@ -52,12 +52,14 @@ class ProductAdmin(admin.ModelAdmin):
         "admin_name",
         "category",
         "price_cents",
+        "product_type",
+        "specialty_upcharge_cents",
         "is_active",
         "is_featured",
         "inventory_mode",
         "created_at",
     )
-    list_filter = ("is_active", "is_featured", "inventory_mode", "category")
+    list_filter = ("is_active", "is_featured", "product_type", "inventory_mode", "category")
     list_editable = ("is_active", "is_featured", "inventory_mode")
     search_fields = (
         "name_en",
@@ -76,6 +78,8 @@ class ProductAdmin(admin.ModelAdmin):
                     "category",
                     "slug",
                     "price_cents",
+                    "product_type",
+                    "specialty_upcharge_cents",
                     "inventory_mode",
                     "is_active",
                     "is_featured",

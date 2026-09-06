@@ -12,6 +12,13 @@
         <span class="text-muted">{% trans "Order number" %}:</span>
         <strong>{{ order.number }}</strong>
     </div>
+    {% if order.drop %}
+        <div class="alert alert-light border rounded-4">
+            <strong>{% trans "Pickup" %}</strong><br>
+            {{ order.drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ order.drop.pickup_ends_at|date:"H:i" }}<br>
+            {{ order.drop.pickup_location }}
+        </div>
+    {% endif %}
 
     <ul class="list-group mb-4">
         {% for item in order.items.all %}
@@ -21,6 +28,8 @@
             </li>
         {% endfor %}
     </ul>
+
+    {% if order.discount_cents %}<p class="text-success">{% trans "Bagel deal savings" %}: −{{ order.discount_cents|shekels }}</p>{% endif %}
 
     <div class="d-flex justify-content-between align-items-center">
         <span class="h5 mb-0">{% trans "Total" %}: {{ order.total_cents|shekels }}</span>

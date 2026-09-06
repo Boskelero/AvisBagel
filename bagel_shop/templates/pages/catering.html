@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{% trans "Catering and large orders" %} | {{ SITE_NAME }}{% endif %}{% endblock %}
+
+{% block content %}
+<section class="contact-choice mb-4">
+    <div>
+        <span class="text-uppercase small fw-bold text-muted">{% trans "Events and advance orders" %}</span>
+        <h1 class="display-6 fw-bold mb-2">{% trans "Catering and large orders" %}</h1>
+        <p class="text-muted mb-0">{% trans "Planning a happy hour, party, office order, or simcha? Tell Avi what you need and we will coordinate it directly." %}</p>
+    </div>
+    <a href="{% url 'pages:contact' %}" class="contact-switch-card">
+        <span>{% trans "Have a regular question?" %}</span>
+        <strong>{% trans "Go to customer contact" %} →</strong>
+    </a>
+</section>
+
+<section class="row g-4 align-items-start">
+    <div class="col-lg-4">
+        <div class="contact-info-card catering-info-card">
+            <h2 class="h5 fw-bold">{% trans "Tell us what you're planning" %}</h2>
+            <p class="text-muted">{% trans "Use this form for orders beyond the active Drop limit, offices, celebrations, and future dates." %}</p>
+            <ul class="list-unstyled mb-0">
+                <li class="mb-2">✓ {% trans "Office breakfasts and happy hours" %}</li>
+                <li class="mb-2">✓ {% trans "Parties and simchas" %}</li>
+                <li>✓ {% trans "Large advance orders" %}</li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="p-4 p-md-5 border rounded-4 bg-white">
+            <h2 class="h4 fw-bold mb-4">{% trans "Request catering" %}</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">{% for field in form %}<div class="{% if field.name == 'message' %}col-12{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+                <button class="btn btn-accent mt-4" type="submit">{% trans "Send catering inquiry" %}</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
