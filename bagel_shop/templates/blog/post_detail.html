@@ -20,7 +20,7 @@
     {% endif %}
 
     <div class="post-content fs-5 lh-lg">
-        {{ post.content_i18n|linebreaks }}
+        <div class="ck-content">{{ post.content_i18n|safe }}</div>
     </div>
 </article>
 {% endblock %}

@@ -20,6 +20,7 @@ urlpatterns = [
     path("staff/products/new/", views.staff_product_create, name="staff_product_create"),
     path("staff/products/<int:product_id>/", views.staff_product_edit, name="staff_product_edit"),
     path("staff/blog/", views.staff_blog_posts, name="staff_blog_posts"),
+    path("staff/blog/upload-image/", views.staff_blog_image_upload, name="staff_blog_image_upload"),
     path("staff/blog/new/", views.staff_blog_post_create, name="staff_blog_post_create"),
     path("staff/blog/<int:post_id>/", views.staff_blog_post_edit, name="staff_blog_post_edit"),
     path("staff/categories/", views.staff_categories, name="staff_categories"),

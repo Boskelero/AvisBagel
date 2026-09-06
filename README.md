@@ -149,6 +149,8 @@ These names match Railway Bucket variable references directly. Standard
 `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `AWS_ACCESS_KEY_ID`,
 `AWS_SECRET_ACCESS_KEY`, and `AWS_S3_REGION_NAME` variables are also accepted.
 In `prod` mode, uploaded media files use S3-compatible object storage.
+The bucket remains private; public product and blog images are streamed through
+stable `/media/...` application URLs so links do not expire after a redeploy.
 In `dev` mode, media is stored locally under `bagel_shop/media/`.
 
 ## Core Flows Implemented

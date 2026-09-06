@@ -4,6 +4,7 @@ from django.forms import BaseModelFormSet
 
 from bagel_shop.apps.catalog.models import Category, Product, ProductImage
 from bagel_shop.apps.core.models import PageMetadata
+from bagel_shop.apps.core.uploads import validate_image_upload
 
 from .models import BagelPriceTier, Drop, DropProduct
 
@@ -96,6 +97,12 @@ class ProductForm(forms.ModelForm):
                 field.widget.attrs.setdefault(
                     "class", "form-select" if isinstance(field.widget, forms.Select) else "form-control"
                 )
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image:
+            validate_image_upload(image)
+        return image
 
     @transaction.atomic
     def save(self, commit=True):

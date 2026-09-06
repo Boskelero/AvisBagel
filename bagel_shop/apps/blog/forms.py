@@ -1,6 +1,9 @@
 from django import forms
 
+from bagel_shop.apps.core.uploads import validate_image_upload
+
 from .models import Post
+from .sanitizers import sanitize_article_html
 
 
 class BlogSearchForm(forms.Form):
@@ -34,9 +37,9 @@ class StaffPostForm(forms.ModelForm):
         }
         widgets = {
             "excerpt_en": forms.Textarea(attrs={"rows": 3}),
-            "content_en": forms.Textarea(attrs={"rows": 10}),
+            "content_en": forms.Textarea(attrs={"rows": 10, "class": "form-control js-rich-editor"}),
             "excerpt_he": forms.Textarea(attrs={"rows": 3}),
-            "content_he": forms.Textarea(attrs={"rows": 10}),
+            "content_he": forms.Textarea(attrs={"rows": 10, "class": "form-control js-rich-editor", "dir": "rtl", "data-direction": "rtl"}),
             "published_at": forms.DateTimeInput(
                 attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
             ),
@@ -49,3 +52,15 @@ class StaffPostForm(forms.ModelForm):
             field.widget.attrs.setdefault(
                 "class", "form-select" if isinstance(field.widget, forms.Select) else "form-control"
             )
+
+    def clean_cover_image(self):
+        image = self.cleaned_data.get("cover_image")
+        if image:
+            validate_image_upload(image)
+        return image
+
+    def clean_content_en(self):
+        return sanitize_article_html(self.cleaned_data.get("content_en", ""))
+
+    def clean_content_he(self):
+        return sanitize_article_html(self.cleaned_data.get("content_he", ""))

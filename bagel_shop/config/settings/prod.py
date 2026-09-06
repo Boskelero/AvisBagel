@@ -27,7 +27,7 @@ AWS_S3_ADDRESSING_STYLE = config("AWS_S3_ADDRESSING_STYLE", default="virtual")
 
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "bagel_shop.storage.PrivateMediaStorage",
         "OPTIONS": {
             "bucket_name": AWS_STORAGE_BUCKET_NAME,
             "endpoint_url": AWS_S3_ENDPOINT_URL,

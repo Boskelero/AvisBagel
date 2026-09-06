@@ -2,12 +2,15 @@ from datetime import timedelta
 from io import BytesIO
 
 from django.core.management import call_command
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core import mail
 from openpyxl import load_workbook
+from PIL import Image
 
 from bagel_shop.apps.catalog.models import Category, Product
 from bagel_shop.apps.blog.models import Post
@@ -423,6 +426,70 @@ class DropOrderingTests(TestCase):
             200,
         )
         self.assertEqual(Client().get(post.get_absolute_url()).status_code, 200)
+
+    def test_blog_content_is_sanitized_before_saving(self):
+        staff = get_user_model().objects.create_user(username="safe-editor", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+        published_at = timezone.localtime(timezone.now()).replace(second=0, microsecond=0)
+
+        response = client.post(
+            reverse("drops:staff_blog_post_create"),
+            {
+                "category": "",
+                "title_en": "Safe article",
+                "excerpt_en": "A safe summary.",
+                "content_en": '<h2>Hello</h2><script>alert(1)</script><a href="javascript:alert(2)">Bad link</a>',
+                "title_he": "",
+                "excerpt_he": "",
+                "content_he": "",
+                "status": Post.STATUS_PUBLISHED,
+                "published_at": published_at.strftime("%Y-%m-%dT%H:%M"),
+            },
+        )
+
+        self.assertRedirects(response, reverse("drops:staff_blog_posts"))
+        content = Post.objects.get(title_en="Safe article").content_en
+        self.assertIn("<h2>Hello</h2>", content)
+        self.assertNotIn("<script", content)
+        self.assertNotIn("javascript:", content)
+
+    def test_staff_can_upload_an_inline_blog_image(self):
+        staff = get_user_model().objects.create_user(username="image-editor", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+        image_buffer = BytesIO()
+        Image.new("RGB", (4, 4), color="#f2c9a9").save(image_buffer, format="PNG")
+        upload = SimpleUploadedFile("article.png", image_buffer.getvalue(), content_type="image/png")
+
+        response = client.post(
+            reverse("drops:staff_blog_image_upload"),
+            {"upload": upload},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        url = response.json()["url"]
+        self.assertTrue(url.startswith("/media/blog/inline/"))
+        stored_name = url.removeprefix("/media/")
+        self.assertTrue(default_storage.exists(stored_name))
+        default_storage.delete(stored_name)
+
+    def test_inline_blog_image_upload_requires_staff(self):
+        response = Client().post(reverse("drops:staff_blog_image_upload"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("drops:staff_login"), response.url)
+
+    @override_settings(CKEDITOR_LICENSE_KEY="test-license-key")
+    def test_blog_form_loads_configured_ckeditor(self):
+        staff = get_user_model().objects.create_user(username="rich-editor", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+
+        response = client.get(reverse("drops:staff_blog_post_create"))
+
+        self.assertContains(response, "ckeditor5.umd.js")
+        self.assertContains(response, 'data-license-key="test-license-key"')
 
     def test_staff_can_update_bagel_deal_prices(self):
         staff = get_user_model().objects.create_user(username="pricing-owner", is_staff=True)

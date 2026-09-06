@@ -4,9 +4,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from bagel_shop.apps.core.views import media_file
+
 urlpatterns = [
     path("i18n/", include("django.conf.urls.i18n")),
     path("health/", include("bagel_shop.apps.core.urls")),
+    path("media/<path:name>", media_file, name="media_file"),
     path("admin/", admin.site.urls),
 ]
 
@@ -25,4 +28,3 @@ urlpatterns += i18n_patterns(
 
 if settings.DEBUG:
     urlpatterns += [path("__reload__/", include("django_browser_reload.urls"))]
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

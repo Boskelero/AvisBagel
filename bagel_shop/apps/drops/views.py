@@ -1,16 +1,19 @@
 import csv
 from datetime import timedelta
 from functools import partial
+from uuid import uuid4
 
 from django.contrib.admin.views.decorators import staff_member_required as admin_staff_member_required
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.forms import modelformset_factory
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -21,6 +24,7 @@ from bagel_shop.apps.catalog.models import Category, Product
 from bagel_shop.apps.blog.forms import StaffPostForm
 from bagel_shop.apps.blog.models import Post
 from bagel_shop.apps.core.models import PageMetadata
+from bagel_shop.apps.core.uploads import validate_image_upload
 from bagel_shop.apps.orders.models import Order, OrderItem
 from bagel_shop.apps.cart.services import add_product_to_cart, clear_cart
 from bagel_shop.apps.notifications.models import (
@@ -322,7 +326,9 @@ def staff_blog_post_create(request):
         messages.success(request, f"{post} was added to the blog.")
         return redirect("drops:staff_blog_posts")
     return render(request, "drops/staff_blog_post_form.html", {
-        "form": form, "title": "Add blog post"
+        "form": form, "title": "Add blog post",
+        "ckeditor_license_key": settings.CKEDITOR_LICENSE_KEY,
+        "ckeditor_version": settings.CKEDITOR_VERSION,
     })
 
 
@@ -336,8 +342,34 @@ def staff_blog_post_edit(request, post_id):
         messages.success(request, f"{post} was updated.")
         return redirect("drops:staff_blog_posts")
     return render(request, "drops/staff_blog_post_form.html", {
-        "form": form, "post": post, "title": f"Edit {post}"
+        "form": form, "post": post, "title": f"Edit {post}",
+        "ckeditor_license_key": settings.CKEDITOR_LICENSE_KEY,
+        "ckeditor_version": settings.CKEDITOR_VERSION,
     })
+
+
+@staff_member_required
+@require_POST
+def staff_blog_image_upload(request):
+    uploaded_file = request.FILES.get("upload")
+    if not uploaded_file:
+        return JsonResponse({"error": {"message": "Choose an image to upload."}}, status=400)
+
+    try:
+        extension = validate_image_upload(uploaded_file)
+    except ValidationError as exc:
+        return JsonResponse({"error": {"message": exc.messages[0]}}, status=400)
+
+    dated_path = timezone.localdate().strftime("%Y/%m")
+    name = f"blog/inline/{dated_path}/{uuid4().hex}{extension}"
+    try:
+        stored_name = default_storage.save(name, uploaded_file)
+    except (OSError, ValueError):
+        return JsonResponse(
+            {"error": {"message": "The image could not be stored. Please try again."}},
+            status=503,
+        )
+    return JsonResponse({"url": default_storage.url(stored_name)})
 
 
 @staff_member_required
