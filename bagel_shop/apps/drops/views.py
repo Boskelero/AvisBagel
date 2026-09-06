@@ -343,15 +343,36 @@ def staff_customers(request):
 @staff_member_required
 def staff_products(request):
     query = request.GET.get("q", "").strip()
-    show_all = request.GET.get("status") == "all"
+    status = request.GET.get("status", "active").strip()
+    product_type = request.GET.get("type", "").strip()
     products = Product.objects.select_related("category").prefetch_related("images").order_by(
         "product_type", "name"
     )
-    if not show_all:
+    if status == "hidden":
+        products = products.filter(is_active=False)
+    elif status == "all":
+        pass
+    else:
+        status = "active"
         products = products.filter(is_active=True)
+    if product_type in {Product.TYPE_BAGEL, Product.TYPE_EXTRA}:
+        products = products.filter(product_type=product_type)
+    else:
+        product_type = ""
     if query:
-        products = products.filter(Q(name_en__icontains=query) | Q(name_he__icontains=query))
-    page_obj = _paginate(request, products)
+        products = products.filter(
+            Q(name_en__icontains=query)
+            | Q(name_he__icontains=query)
+            | Q(category__name_en__icontains=query)
+            | Q(category__name_he__icontains=query)
+        )
+    page_obj = _paginate(request, products, per_page=10)
+    product_metrics = Product.objects.aggregate(
+        total=Count("id"),
+        active=Count("id", filter=Q(is_active=True)),
+        bagels=Count("id", filter=Q(product_type=Product.TYPE_BAGEL)),
+        extras=Count("id", filter=Q(product_type=Product.TYPE_EXTRA)),
+    )
     single_price_cents = (
         BagelPriceTier.objects.filter(quantity=1, is_active=True)
         .values_list("price_cents", flat=True)
@@ -364,7 +385,12 @@ def staff_products(request):
             else product.price_cents
         )
     return render(request, "drops/staff_products.html", {
-        "products": page_obj, "page_obj": page_obj, "query": query, "show_all": show_all
+        "products": page_obj,
+        "page_obj": page_obj,
+        "query": query,
+        "selected_status": status,
+        "selected_type": product_type,
+        "product_metrics": product_metrics,
     })
 
 
@@ -990,6 +1016,22 @@ def staff_customers_excel(request):
 @staff_member_required
 def staff_products_excel(request):
     products = Product.objects.select_related("category").order_by("product_type", "name")
+    query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "active").strip()
+    product_type = request.GET.get("type", "").strip()
+    if status == "hidden":
+        products = products.filter(is_active=False)
+    elif status != "all":
+        products = products.filter(is_active=True)
+    if product_type in {Product.TYPE_BAGEL, Product.TYPE_EXTRA}:
+        products = products.filter(product_type=product_type)
+    if query:
+        products = products.filter(
+            Q(name_en__icontains=query)
+            | Q(name_he__icontains=query)
+            | Q(category__name_en__icontains=query)
+            | Q(category__name_he__icontains=query)
+        )
     single_price_cents = (
         BagelPriceTier.objects.filter(quantity=1, is_active=True)
         .values_list("price_cents", flat=True)

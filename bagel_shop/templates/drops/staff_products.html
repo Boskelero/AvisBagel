@@ -1,9 +1,44 @@
 {% extends "drops/staff_base.html" %}
 {% load i18n core_extras %}
+
 {% block title %}{% trans "Products" %} | {{ SITE_NAME }}{% endblock %}
 {% block staff_content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4"><div><h1 class="display-6 fw-bold mb-1">{% trans "Products" %}</h1><p class="text-muted mb-0">{% trans "Everything shown in the permanent store catalog." %}</p></div><div class="d-flex gap-2"><a href="{% url 'drops:staff_products_excel' %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a><a href="{% url 'drops:staff_product_create' %}" class="btn btn-accent">{% trans "Add product" %}</a></div></div>
-<div class="d-flex flex-wrap gap-2 mb-4"><form method="get" class="d-flex gap-2 flex-grow-1"><input type="hidden" name="status" value="{% if show_all %}all{% endif %}"><input class="form-control" name="q" value="{{ query }}" placeholder="{% trans 'Search products' %}"><button class="btn btn-dark">{% trans "Search" %}</button></form>{% if show_all %}<a href="{% url 'drops:staff_products' %}" class="btn btn-outline-dark">{% trans "Active only" %}</a>{% else %}<a href="{% url 'drops:staff_products' %}?status=all" class="btn btn-outline-dark">{% trans "Show hidden" %}</a>{% endif %}</div>
-<div class="table-responsive bg-white border rounded-4"><table class="table align-middle mb-0"><thead><tr><th>{% trans "Product" %}</th><th>{% trans "Type" %}</th><th>{% trans "Price" %}</th><th>{% trans "Status" %}</th><th></th></tr></thead><tbody>{% for product in products %}<tr><td><div class="d-flex align-items-center gap-2">{% if product.primary_image %}<img src="{{ product.primary_image.image.url }}" width="56" height="44" class="rounded object-fit-cover" alt="">{% endif %}<div><strong>{{ product.name_en|default:product.name }}</strong><br><small class="text-muted">{{ product.category }}</small></div></div></td><td>{{ product.get_product_type_display }}</td><td>{{ product.staff_price_cents|shekels }} <small class="text-muted">{% if product.product_type == 'bagel' %}{% trans "from Pricing" %}{% else %}{% trans "each" %}{% endif %}</small>{% if product.product_type == 'bagel' and product.specialty_upcharge_cents %}<br><small class="text-muted">{% trans "Includes" %} +{{ product.specialty_upcharge_cents|shekels }} {% trans "specialty upcharge" %}</small>{% endif %}</td><td>{% if product.is_active %}<span class="badge text-bg-success">{% trans "Active" %}</span>{% else %}<span class="badge text-bg-secondary">{% trans "Hidden" %}</span>{% endif %}</td><td class="text-end"><a href="{% url 'drops:staff_product_edit' product.id %}" class="btn btn-sm btn-outline-dark">{% trans "Edit" %}</a></td></tr>{% empty %}<tr><td colspan="5">{% trans "No products found." %}</td></tr>{% endfor %}</tbody></table></div>
+<div class="staff-page-heading compact">
+    <div><span class="staff-eyebrow">{% trans "Catalog" %}</span><h1>{% trans "Products" %}</h1><p>{% trans "Manage every bagel and extra in the permanent store catalog." %}</p></div>
+    <div class="d-flex flex-wrap gap-2"><a href="{% url 'drops:staff_products_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a><a href="{% url 'drops:staff_product_create' %}" class="btn btn-accent">{% trans "Add product" %}</a></div>
+</div>
+
+<section class="staff-metric-grid mb-4">
+    <article class="staff-metric-card is-primary"><span>{% trans "Active products" %}</span><strong>{{ product_metrics.active }}</strong><small>{% trans "Visible in the store catalog" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "All products" %}</span><strong>{{ product_metrics.total }}</strong><small>{% trans "Including hidden items" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Bagel flavors" %}</span><strong>{{ product_metrics.bagels }}</strong><small>{% trans "Count toward Drop capacity" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Extras" %}</span><strong>{{ product_metrics.extras }}</strong><small>{% trans "Spreads, jams, and add-ons" %}</small></article>
+</section>
+
+<form method="get" class="staff-product-filters mb-4">
+    <div><label for="product-search">{% trans "Search catalog" %}</label><input id="product-search" class="form-control" type="search" name="q" value="{{ query }}" placeholder="{% trans 'Product or category name' %}"></div>
+    <div><label for="product-type">{% trans "Type" %}</label><select id="product-type" class="form-select" name="type"><option value="" {% if not selected_type %}selected{% endif %}>{% trans "All types" %}</option><option value="bagel" {% if selected_type == 'bagel' %}selected{% endif %}>{% trans "Bagels" %}</option><option value="extra" {% if selected_type == 'extra' %}selected{% endif %}>{% trans "Extras" %}</option></select></div>
+    <div><label for="product-status">{% trans "Visibility" %}</label><select id="product-status" class="form-select" name="status"><option value="active" {% if selected_status == 'active' %}selected{% endif %}>{% trans "Active only" %}</option><option value="hidden" {% if selected_status == 'hidden' %}selected{% endif %}>{% trans "Hidden only" %}</option><option value="all" {% if selected_status == 'all' %}selected{% endif %}>{% trans "All products" %}</option></select></div>
+    <button class="btn btn-dark" type="submit">{% trans "Apply" %}</button>
+</form>
+{% if query or selected_type or selected_status != 'active' %}<a class="staff-clear-filters" href="{% url 'drops:staff_products' %}">{% trans "Clear filters" %}</a>{% endif %}
+
+<div class="staff-section-heading"><div><h2>{% trans "Catalog items" %}</h2><p>{% trans "Bagel prices come from Pricing; specialty upcharges stay on each flavor." %}</p></div><span class="staff-inbox-count">{{ page_obj.paginator.count }}</span></div>
+<div class="table-responsive staff-table-card staff-product-table" tabindex="0" aria-label="{% trans 'Scrollable product table' %}">
+    <table class="table align-middle mb-0">
+        <thead><tr><th>{% trans "Product" %}</th><th>{% trans "Type" %}</th><th>{% trans "Customer price" %}</th><th>{% trans "Visibility" %}</th><th class="text-end">{% trans "Action" %}</th></tr></thead>
+        <tbody>
+        {% for product in products %}
+            <tr>
+                <td><div class="staff-product-cell"><span class="staff-product-thumb">{% if product.primary_image %}<img src="{{ product.primary_image.image.url }}" alt="">{% elif product.product_type == 'bagel' %}B{% else %}E{% endif %}</span><div><strong>{{ product.name_en|default:product.name }}</strong><small>{{ product.category }}</small>{% if product.is_featured %}<span class="staff-product-featured">{% trans "Featured" %}</span>{% endif %}</div></div></td>
+                <td>{{ product.get_product_type_display }}</td>
+                <td class="staff-product-price"><strong>{{ product.staff_price_cents|shekels }}</strong>{% if product.product_type == 'bagel' %}<small>{% trans "Base price from Pricing" %}</small>{% if product.specialty_upcharge_cents %}<small>+{{ product.specialty_upcharge_cents|shekels }} {% trans "specialty add-on" %}</small>{% endif %}{% else %}<small>{% trans "Per item" %}</small>{% endif %}</td>
+                <td>{% if product.is_active %}<span class="staff-status-pill is-active"><span></span>{% trans "Active" %}</span>{% else %}<span class="staff-status-pill is-inactive"><span></span>{% trans "Hidden" %}</span>{% endif %}</td>
+                <td class="text-end"><a href="{% url 'drops:staff_product_edit' product.id %}" class="btn btn-sm btn-outline-dark">{% trans "Edit product" %}</a></td>
+            </tr>
+        {% empty %}<tr><td colspan="5" class="staff-empty-cell"><strong>{% trans "No products found" %}</strong><br>{% trans "Try clearing the current catalog filters." %}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+</div>
 {% include "drops/includes/pagination.html" %}
 {% endblock %}

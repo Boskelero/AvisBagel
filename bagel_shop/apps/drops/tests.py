@@ -487,6 +487,38 @@ class DropOrderingTests(TestCase):
         workbook = load_workbook(BytesIO(export.content), read_only=True)
         self.assertEqual(workbook["Subscribers"].max_row, 31)
 
+    def test_staff_products_support_catalog_filters_and_mobile_table_wrapper(self):
+        hidden_extra = Product.objects.create(
+            category=self.plain.category,
+            name="Apricot Jam",
+            name_en="Apricot Jam",
+            slug="apricot-jam-test",
+            price_cents=2800,
+            product_type=Product.TYPE_EXTRA,
+            is_active=False,
+        )
+        staff = get_user_model().objects.create_user(username="catalog-manager", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+
+        response = client.get(
+            reverse("drops:staff_products"),
+            {"status": "hidden", "type": "extra", "q": "Apricot"},
+        )
+        self.assertEqual(response.context["page_obj"].paginator.count, 1)
+        self.assertEqual(response.context["products"][0], hidden_extra)
+        self.assertEqual(response.context["selected_status"], "hidden")
+        self.assertEqual(response.context["selected_type"], "extra")
+        self.assertContains(response, 'class="table-responsive staff-table-card')
+        self.assertContains(response, 'tabindex="0"')
+
+        export = client.get(
+            reverse("drops:staff_products_excel"),
+            {"status": "hidden", "type": "extra"},
+        )
+        workbook = load_workbook(BytesIO(export.content), read_only=True)
+        self.assertEqual(workbook["Products"].max_row, 2)
+
     def test_flash_messages_are_closable_and_auto_dismiss(self):
         staff = get_user_model().objects.create_user(username="messenger", is_staff=True)
         client = Client()

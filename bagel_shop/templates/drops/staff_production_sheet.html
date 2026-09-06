@@ -2,19 +2,19 @@
 {% load i18n %}
 
 {% block title %}{{ drop.name }} — {% trans "Production sheet" %}{% endblock %}
-{% block extra_head %}<style>@media print {.site-nav,.site-footer,.no-print{display:none!important} main.container{max-width:none;padding:0!important}.production-sheet{border:0!important}}</style>{% endblock %}
+{% block extra_head %}<style>@media print {.site-nav,.site-footer,.no-print{display:none!important} main.container{max-width:none;padding:0!important}.production-sheet{border:0!important}.production-sheet .table-responsive{overflow:visible!important}.production-sheet table{min-width:0!important}}</style>{% endblock %}
 
 {% block staff_content %}
 <div class="production-sheet bg-white border rounded-4 p-4">
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div><h1 class="h2 fw-bold mb-1">{{ drop.name }}</h1><p class="mb-0">{{ drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ drop.pickup_ends_at|date:"H:i" }} · {{ drop.pickup_location }}</p></div>
         <button class="btn btn-dark no-print" type="button" onclick="window.print()">{% trans "Print" %}</button>
     </div>
     <div class="row g-4 mb-5">
-        <div class="col-6"><h2 class="h4">{% trans "Bagels" %}</h2><table class="table"><tbody>{% for row in bagel_totals %}<tr><td>{{ row.product_name }}</td><td class="text-end fw-bold">{{ row.quantity }}</td></tr>{% endfor %}<tr class="table-light"><td>{% trans "Total bagels" %}</td><td class="text-end fw-bold">{{ drop.reserved_bagels }}</td></tr></tbody></table></div>
-        <div class="col-6"><h2 class="h4">{% trans "Extras" %}</h2><table class="table"><tbody>{% for row in extra_totals %}<tr><td>{{ row.product_name }}</td><td class="text-end fw-bold">{{ row.quantity }}</td></tr>{% empty %}<tr><td class="text-muted">{% trans "None" %}</td></tr>{% endfor %}</tbody></table></div>
+        <div class="col-md-6"><h2 class="h4">{% trans "Bagels" %}</h2><div class="table-responsive"><table class="table"><tbody>{% for row in bagel_totals %}<tr><td>{{ row.product_name }}</td><td class="text-end fw-bold">{{ row.quantity }}</td></tr>{% endfor %}<tr class="table-light"><td>{% trans "Total bagels" %}</td><td class="text-end fw-bold">{{ drop.reserved_bagels }}</td></tr></tbody></table></div></div>
+        <div class="col-md-6"><h2 class="h4">{% trans "Extras" %}</h2><div class="table-responsive"><table class="table"><tbody>{% for row in extra_totals %}<tr><td>{{ row.product_name }}</td><td class="text-end fw-bold">{{ row.quantity }}</td></tr>{% empty %}<tr><td class="text-muted">{% trans "None" %}</td></tr>{% endfor %}</tbody></table></div></div>
     </div>
     <h2 class="h4">{% trans "Pickup list" %}</h2>
-    <table class="table table-bordered"><thead><tr><th>{% trans "Ready" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th><th>{% trans "Bagels" %}</th><th>{% trans "Order" %}</th></tr></thead><tbody>{% for order in orders %}<tr><td style="width:4rem"></td><td>{{ order.customer_name }}</td><td>{{ order.phone }}</td><td>{{ order.bagel_quantity }}</td><td>{{ order.number }}</td></tr>{% endfor %}</tbody></table>
+    <div class="table-responsive staff-table-card" tabindex="0" aria-label="{% trans 'Scrollable pickup table' %}"><table class="table table-bordered mb-0"><thead><tr><th>{% trans "Ready" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Phone" %}</th><th>{% trans "Bagels" %}</th><th>{% trans "Order" %}</th></tr></thead><tbody>{% for order in orders %}<tr><td style="width:4rem"></td><td>{{ order.customer_name }}</td><td>{{ order.phone }}</td><td>{{ order.bagel_quantity }}</td><td>{{ order.number }}</td></tr>{% endfor %}</tbody></table></div>
 </div>
 {% endblock %}

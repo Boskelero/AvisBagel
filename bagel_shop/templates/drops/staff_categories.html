@@ -1,6 +1,24 @@
 {% extends "drops/staff_base.html" %}
 {% load i18n %}
+
 {% block title %}{% trans "Categories" %} | {{ SITE_NAME }}{% endblock %}
 {% block staff_content %}
-<h1 class="display-6 fw-bold mb-4">{% trans "Categories" %}</h1><div class="row g-4"><div class="col-lg-7"><div class="bg-white border rounded-4 p-3"><table class="table align-middle mb-0"><thead><tr><th>{% trans "Category" %}</th><th>{% trans "Products" %}</th><th></th></tr></thead><tbody>{% for category in categories %}<tr><td>{{ category.name_en|default:category.name }}{% if not category.is_active %} <span class="badge text-bg-secondary">{% trans "Hidden" %}</span>{% endif %}</td><td>{{ category.product_count }}</td><td><a href="{% url 'drops:staff_category_edit' category.id %}" class="btn btn-sm btn-outline-dark">{% trans "Edit" %}</a></td></tr>{% endfor %}</tbody></table></div></div><div class="col-lg-5"><form method="post" class="bg-white border rounded-4 p-4">{% csrf_token %}<h2 class="h5 fw-bold">{% if editing_category %}{% trans "Edit category" %}{% else %}{% trans "Add category" %}{% endif %}</h2>{% for field in form %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}<button class="btn btn-accent" type="submit">{% trans "Save category" %}</button></form></div></div>
+<div class="staff-page-heading compact"><div><span class="staff-eyebrow">{% trans "Catalog" %}</span><h1>{% trans "Categories" %}</h1><p>{% trans "Organize bagels, spreads, jams, and future products." %}</p></div></div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="table-responsive staff-table-card staff-compact-table" tabindex="0" aria-label="{% trans 'Scrollable category table' %}">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>{% trans "Category" %}</th><th>{% trans "Products" %}</th><th class="text-end">{% trans "Action" %}</th></tr></thead>
+                <tbody>{% for category in categories %}<tr><td><strong>{{ category.name_en|default:category.name }}</strong>{% if not category.is_active %} <span class="staff-status-pill is-inactive"><span></span>{% trans "Hidden" %}</span>{% endif %}</td><td>{{ category.product_count }}</td><td class="text-end"><a href="{% url 'drops:staff_category_edit' category.id %}" class="btn btn-sm btn-outline-dark">{% trans "Edit" %}</a></td></tr>{% empty %}<tr><td colspan="3" class="staff-empty-cell">{% trans "No categories yet." %}</td></tr>{% endfor %}</tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <form method="post" class="bg-white border rounded-4 p-4">{% csrf_token %}
+            <h2 class="h5 fw-bold">{% if editing_category %}{% trans "Edit category" %}{% else %}{% trans "Add category" %}{% endif %}</h2>
+            {% for field in form %}<div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}
+            <button class="btn btn-accent" type="submit">{% trans "Save category" %}</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
