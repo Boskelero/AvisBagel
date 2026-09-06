@@ -321,9 +321,16 @@ def staff_order_detail(request, order_id):
 @staff_member_required
 def staff_customers(request):
     query = request.GET.get("q", "").strip()
-    page_obj = _paginate(request, _customer_rows(query))
+    customer_rows = _customer_rows(query)
+    page_obj = _paginate(request, customer_rows, per_page=10)
     return render(request, "drops/staff_customers.html", {
-        "customers": page_obj, "page_obj": page_obj, "query": query
+        "customers": page_obj,
+        "page_obj": page_obj,
+        "query": query,
+        "customer_count": len(customer_rows),
+        "repeat_customer_count": sum(customer["order_count"] > 1 for customer in customer_rows),
+        "customer_order_count": sum(customer["order_count"] for customer in customer_rows),
+        "customer_value_cents": sum(customer["total_cents"] for customer in customer_rows),
     })
 
 
@@ -621,9 +628,30 @@ def staff_inquiry_status(request, inquiry_id):
 
 @staff_member_required
 def staff_subscribers(request):
-    page_obj = _paginate(request, NewsletterSubscriber.objects.all())
+    query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip()
+    subscribers = NewsletterSubscriber.objects.all()
+    if query:
+        subscribers = subscribers.filter(email__icontains=query)
+    if status == "active":
+        subscribers = subscribers.filter(is_active=True)
+    elif status == "inactive":
+        subscribers = subscribers.filter(is_active=False)
+    else:
+        status = ""
+    metrics = NewsletterSubscriber.objects.aggregate(
+        total=Count("id"),
+        active=Count("id", filter=Q(is_active=True)),
+        inactive=Count("id", filter=Q(is_active=False)),
+        recent=Count("id", filter=Q(created_at__gte=timezone.now() - timedelta(days=30))),
+    )
+    page_obj = _paginate(request, subscribers, per_page=10)
     return render(request, "drops/staff_subscribers.html", {
-        "subscribers": page_obj, "page_obj": page_obj
+        "subscribers": page_obj,
+        "page_obj": page_obj,
+        "query": query,
+        "selected_status": status,
+        "subscriber_metrics": metrics,
     })
 
 
@@ -634,6 +662,11 @@ def staff_subscriber_toggle(request, subscriber_id):
     subscriber.is_active = not subscriber.is_active
     subscriber.save(update_fields=["is_active"])
     messages.success(request, "Subscriber status updated.")
+    next_url = request.POST.get("next", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
     return redirect("drops:staff_subscribers")
 
 
@@ -972,11 +1005,20 @@ def staff_products_excel(request):
 
 @staff_member_required
 def staff_subscribers_excel(request):
+    subscribers = NewsletterSubscriber.objects.all()
+    query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip()
+    if query:
+        subscribers = subscribers.filter(email__icontains=query)
+    if status == "active":
+        subscribers = subscribers.filter(is_active=True)
+    elif status == "inactive":
+        subscribers = subscribers.filter(is_active=False)
     rows = [[
         subscriber.email,
         "Active" if subscriber.is_active else "Inactive",
         timezone.localtime(subscriber.created_at).strftime("%Y-%m-%d %H:%M"),
-    ] for subscriber in NewsletterSubscriber.objects.all()]
+    ] for subscriber in subscribers]
     return workbook_response("drop-subscribers.xlsx", [(
         "Subscribers", ["Email", "Status", "Joined"], rows
     )])

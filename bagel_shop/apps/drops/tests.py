@@ -442,8 +442,16 @@ class DropOrderingTests(TestCase):
         client.force_login(staff)
 
         listing = client.get(reverse("drops:staff_subscribers"), {"page": 2})
-        self.assertEqual(listing.context["page_obj"].paginator.num_pages, 2)
-        self.assertEqual(len(listing.context["subscribers"]), 5)
+        self.assertEqual(listing.context["page_obj"].paginator.num_pages, 3)
+        self.assertEqual(len(listing.context["subscribers"]), 10)
+        self.assertContains(listing, "Page 2 of 3")
+
+        filtered = client.get(
+            reverse("drops:staff_subscribers"),
+            {"q": "person01", "status": "active"},
+        )
+        self.assertEqual(filtered.context["page_obj"].paginator.count, 1)
+        self.assertEqual(filtered.context["selected_status"], "active")
 
         export = client.get(reverse("drops:staff_subscribers_excel"))
         self.assertEqual(

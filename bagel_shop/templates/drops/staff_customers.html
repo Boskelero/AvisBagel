@@ -3,10 +3,41 @@
 
 {% block title %}{% trans "Customers" %} | {{ SITE_NAME }}{% endblock %}
 {% block staff_content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"><div><h1 class="display-6 fw-bold mb-1">{% trans "Customers" %}</h1><p class="text-muted mb-0">{% trans "Order history and repeat customers." %}</p></div><div class="d-flex gap-2"><a href="{% url 'drops:staff_customers_excel' %}{% if query %}?q={{ query|urlencode }}{% endif %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a><a href="{% url 'drops:staff_dashboard' %}" class="btn btn-outline-dark">{% trans "Drops" %}</a></div></div>
-<form method="get" class="d-flex gap-2 mb-4"><input class="form-control" type="search" name="q" value="{{ query }}" placeholder="{% trans 'Search name, email, or phone' %}"><button class="btn btn-dark" type="submit">{% trans "Search" %}</button></form>
-<div class="table-responsive bg-white border rounded-4"><table class="table align-middle mb-0"><thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Orders" %}</th><th>{% trans "Bagels" %}</th><th>{% trans "Order value" %}</th><th>{% trans "Last order" %}</th></tr></thead><tbody>
-{% for customer in customers %}<tr><td><a class="fw-semibold" href="{% url 'drops:staff_customer_detail' customer.latest_order.id %}">{{ customer.name }}</a><br><small class="text-muted">{{ customer.email }} · {{ customer.phone }}</small></td><td>{{ customer.order_count }}</td><td>{{ customer.bagel_count }}</td><td>{{ customer.total_cents|shekels }}</td><td>{{ customer.latest_order.created_at|date:"M j, Y" }}</td></tr>{% empty %}<tr><td colspan="5" class="text-muted">{% trans "No customers found." %}</td></tr>{% endfor %}
-</tbody></table></div>
+<div class="staff-page-heading compact">
+    <div><span class="staff-eyebrow">{% trans "Audience" %}</span><h1>{% trans "Customers" %}</h1><p>{% trans "See who orders, who returns, and the value of those relationships." %}</p></div>
+    <a href="{% url 'drops:staff_customers_excel' %}{% if query %}?q={{ query|urlencode }}{% endif %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a>
+</div>
+
+<section class="staff-metric-grid mb-4">
+    <article class="staff-metric-card is-primary"><span>{% trans "Customers" %}</span><strong>{{ customer_count }}</strong><small>{% if query %}{% trans "Matching this search" %}{% else %}{% trans "Unique customer emails" %}{% endif %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Repeat customers" %}</span><strong>{{ repeat_customer_count }}</strong><small>{% trans "Placed more than one order" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Orders placed" %}</span><strong>{{ customer_order_count }}</strong><small>{% trans "Across these customers" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Order value" %}</span><strong>{{ customer_value_cents|shekels }}</strong><small>{% trans "Excludes canceled orders" %}</small></article>
+</section>
+
+<form method="get" class="staff-audience-filters mb-4">
+    <div><label for="customer-search">{% trans "Search customers" %}</label><input id="customer-search" class="form-control" type="search" name="q" value="{{ query }}" placeholder="{% trans 'Name, email, or phone' %}"></div>
+    <button class="btn btn-dark" type="submit">{% trans "Search" %}</button>
+</form>
+{% if query %}<a class="staff-clear-filters" href="{% url 'drops:staff_customers' %}">{% trans "Clear search" %}</a>{% endif %}
+
+<div class="staff-section-heading"><div><h2>{% trans "Customer directory" %}</h2><p>{% trans "Open a customer to review their complete order history." %}</p></div><span class="staff-inbox-count">{{ page_obj.paginator.count }}</span></div>
+<div class="table-responsive staff-table-card staff-audience-table">
+    <table class="table align-middle mb-0">
+        <thead><tr><th>{% trans "Customer" %}</th><th>{% trans "Orders" %}</th><th>{% trans "Bagels" %}</th><th>{% trans "Order value" %}</th><th>{% trans "Last order" %}</th><th></th></tr></thead>
+        <tbody>
+        {% for customer in customers %}
+            <tr>
+                <td><div class="staff-person-cell"><span class="staff-person-avatar" aria-hidden="true">{{ customer.name|slice:":1"|upper }}</span><div><strong>{{ customer.name }}</strong><small><a href="mailto:{{ customer.email }}">{{ customer.email }}</a>{% if customer.phone %}<span>{{ customer.phone }}</span>{% endif %}</small></div></div></td>
+                <td><strong>{{ customer.order_count }}</strong>{% if customer.order_count > 1 %}<span class="staff-repeat-badge">{% trans "Repeat" %}</span>{% endif %}</td>
+                <td>{{ customer.bagel_count }}</td>
+                <td class="fw-semibold">{{ customer.total_cents|shekels }}</td>
+                <td>{{ customer.latest_order.created_at|date:"M j, Y" }}<small>{{ customer.latest_order.created_at|date:"H:i" }}</small></td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-dark" href="{% url 'drops:staff_customer_detail' customer.latest_order.id %}">{% trans "View history" %}</a></td>
+            </tr>
+        {% empty %}<tr><td colspan="6" class="staff-empty-cell"><strong>{% trans "No customers found" %}</strong><br>{% trans "Try a different name, email address, or phone number." %}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+</div>
 {% include "drops/includes/pagination.html" %}
 {% endblock %}

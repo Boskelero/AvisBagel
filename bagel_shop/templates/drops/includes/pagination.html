@@ -1,17 +1,13 @@
 {% load i18n %}
 {% if page_obj.has_other_pages %}
-<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="{% trans 'List pagination' %}">
-    <span class="small text-muted">
+<nav class="staff-list-pagination" aria-label="{% trans 'List pagination' %}">
+    <span class="staff-pagination-summary">
         {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}Showing {{ start }}–{{ end }} of {{ total }}{% endblocktrans %}
     </span>
-    <ul class="pagination pagination-sm mb-0">
-        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-            {% if page_obj.has_previous %}<a class="page-link" href="{% querystring page=page_obj.previous_page_number %}">{% trans "Previous" %}</a>{% else %}<span class="page-link">{% trans "Previous" %}</span>{% endif %}
-        </li>
-        <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
-        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-            {% if page_obj.has_next %}<a class="page-link" href="{% querystring page=page_obj.next_page_number %}">{% trans "Next" %}</a>{% else %}<span class="page-link">{% trans "Next" %}</span>{% endif %}
-        </li>
-    </ul>
+    <div class="staff-pagination-controls">
+        {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}">← {% trans "Previous" %}</a>{% else %}<span class="is-disabled">← {% trans "Previous" %}</span>{% endif %}
+        <strong>{% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</strong>
+        {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}">{% trans "Next" %} →</a>{% else %}<span class="is-disabled">{% trans "Next" %} →</span>{% endif %}
+    </div>
 </nav>
 {% endif %}
