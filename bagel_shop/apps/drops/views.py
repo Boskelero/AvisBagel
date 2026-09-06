@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Count, F, Q, Sum
+from django.db.models import Count, Exists, F, OuterRef, Q, Sum
 from django.forms import DateTimeField, modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
@@ -321,12 +321,18 @@ def staff_order_detail(request, order_id):
 @staff_member_required
 def staff_customers(request):
     query = request.GET.get("q", "").strip()
+    customer_type = request.GET.get("customer_type", "").strip()
     customer_rows = _customer_rows(query)
+    if customer_type == "repeat":
+        customer_rows = [customer for customer in customer_rows if customer["order_count"] > 1]
+    else:
+        customer_type = ""
     page_obj = _paginate(request, customer_rows, per_page=10)
     return render(request, "drops/staff_customers.html", {
         "customers": page_obj,
         "page_obj": page_obj,
         "query": query,
+        "selected_customer_type": customer_type,
         "customer_count": len(customer_rows),
         "repeat_customer_count": sum(customer["order_count"] > 1 for customer in customer_rows),
         "customer_order_count": sum(customer["order_count"] for customer in customer_rows),
@@ -630,7 +636,10 @@ def staff_inquiry_status(request, inquiry_id):
 def staff_subscribers(request):
     query = request.GET.get("q", "").strip()
     status = request.GET.get("status", "").strip()
-    subscribers = NewsletterSubscriber.objects.all()
+    customer_orders = Order.objects.exclude(status=Order.STATUS_DRAFT).filter(
+        email__iexact=OuterRef("email")
+    )
+    subscribers = NewsletterSubscriber.objects.annotate(is_customer=Exists(customer_orders))
     if query:
         subscribers = subscribers.filter(email__icontains=query)
     if status == "active":
@@ -959,6 +968,9 @@ def staff_orders_excel(request):
 
 @staff_member_required
 def staff_customers_excel(request):
+    customer_rows = _customer_rows(request.GET.get("q", "").strip())
+    if request.GET.get("customer_type", "").strip() == "repeat":
+        customer_rows = [customer for customer in customer_rows if customer["order_count"] > 1]
     rows = [[
         customer["name"],
         customer["email"],
@@ -967,7 +979,7 @@ def staff_customers_excel(request):
         customer["bagel_count"],
         customer["total_cents"] / 100,
         timezone.localtime(customer["latest_order"].created_at).strftime("%Y-%m-%d %H:%M"),
-    ] for customer in _customer_rows(request.GET.get("q", "").strip())]
+    ] for customer in customer_rows]
     return workbook_response("customers.xlsx", [(
         "Customers",
         ["Customer", "Email", "Phone", "Orders", "Bagels", "Order value ILS", "Last order"],

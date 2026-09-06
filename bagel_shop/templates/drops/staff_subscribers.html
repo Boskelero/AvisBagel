@@ -29,7 +29,7 @@
         <tbody>
         {% for subscriber in subscribers %}
             <tr>
-                <td><div class="staff-person-cell"><span class="staff-person-avatar is-email" aria-hidden="true">@</span><div><strong>{{ subscriber.email }}</strong><small>{% trans "Drop notifications" %}</small></div></div></td>
+                <td><div class="staff-person-cell"><span class="staff-person-avatar is-email" aria-hidden="true">@</span><div><strong>{{ subscriber.email }}</strong><small>{% trans "Drop notifications" %}{% if subscriber.is_customer %}<span class="staff-customer-badge">{% trans "Customer" %}</span>{% endif %}</small></div></div></td>
                 <td>{% if subscriber.is_active %}<span class="staff-status-pill is-active"><span></span>{% trans "Active" %}</span>{% else %}<span class="staff-status-pill is-inactive"><span></span>{% trans "Inactive" %}</span>{% endif %}</td>
                 <td>{{ subscriber.created_at|date:"M j, Y" }}<small>{{ subscriber.created_at|date:"H:i" }}</small></td>
                 <td class="text-end"><form method="post" action="{% url 'drops:staff_subscriber_toggle' subscriber.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm {% if subscriber.is_active %}btn-outline-dark{% else %}btn-dark{% endif %}" type="submit">{% if subscriber.is_active %}{% trans "Deactivate" %}{% else %}{% trans "Reactivate" %}{% endif %}</button></form></td>

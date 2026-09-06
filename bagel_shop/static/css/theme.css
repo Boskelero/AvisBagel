@@ -1060,6 +1060,8 @@ textarea:focus {
 .staff-person-cell small { margin-top: 0.15rem; }
 .staff-person-cell small a { color: #65584e; text-decoration: none; }
 .staff-person-cell small span::before { content: " · "; }
+.staff-person-cell .staff-customer-badge { display: inline-flex; margin-left: 0.35rem; padding: 0.12rem 0.38rem; border-radius: 999px; background: #f2c9a9; color: #70401b; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.03em; text-transform: uppercase; }
+.staff-person-cell .staff-customer-badge::before { content: none; }
 .staff-person-avatar { display: grid; flex: 0 0 2.35rem; width: 2.35rem; height: 2.35rem; border-radius: 50%; place-items: center; background: #f2c9a9; color: #603614; font-size: 0.86rem; font-weight: 900; }
 .staff-person-avatar.is-email { background: #f4eadd; color: #8c572d; }
 .staff-repeat-badge { display: block; width: fit-content; margin-top: 0.25rem; padding: 0.15rem 0.4rem; border-radius: 999px; background: #e2f3e9; color: #176b42; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; }

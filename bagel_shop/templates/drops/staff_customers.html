@@ -5,7 +5,7 @@
 {% block staff_content %}
 <div class="staff-page-heading compact">
     <div><span class="staff-eyebrow">{% trans "Audience" %}</span><h1>{% trans "Customers" %}</h1><p>{% trans "See who orders, who returns, and the value of those relationships." %}</p></div>
-    <a href="{% url 'drops:staff_customers_excel' %}{% if query %}?q={{ query|urlencode }}{% endif %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a>
+    <a href="{% url 'drops:staff_customers_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a>
 </div>
 
 <section class="staff-metric-grid mb-4">
@@ -15,11 +15,12 @@
     <article class="staff-metric-card"><span>{% trans "Order value" %}</span><strong>{{ customer_value_cents|shekels }}</strong><small>{% trans "Excludes canceled orders" %}</small></article>
 </section>
 
-<form method="get" class="staff-audience-filters mb-4">
+<form method="get" class="staff-audience-filters has-status mb-4">
     <div><label for="customer-search">{% trans "Search customers" %}</label><input id="customer-search" class="form-control" type="search" name="q" value="{{ query }}" placeholder="{% trans 'Name, email, or phone' %}"></div>
-    <button class="btn btn-dark" type="submit">{% trans "Search" %}</button>
+    <div><label for="customer-type">{% trans "Customer type" %}</label><select id="customer-type" class="form-select" name="customer_type"><option value="" {% if not selected_customer_type %}selected{% endif %}>{% trans "All customers" %}</option><option value="repeat" {% if selected_customer_type == 'repeat' %}selected{% endif %}>{% trans "Repeat customers" %}</option></select></div>
+    <button class="btn btn-dark" type="submit">{% trans "Apply" %}</button>
 </form>
-{% if query %}<a class="staff-clear-filters" href="{% url 'drops:staff_customers' %}">{% trans "Clear search" %}</a>{% endif %}
+{% if query or selected_customer_type %}<a class="staff-clear-filters" href="{% url 'drops:staff_customers' %}">{% trans "Clear filters" %}</a>{% endif %}
 
 <div class="staff-section-heading"><div><h2>{% trans "Customer directory" %}</h2><p>{% trans "Open a customer to review their complete order history." %}</p></div><span class="staff-inbox-count">{{ page_obj.paginator.count }}</span></div>
 <div class="table-responsive staff-table-card staff-audience-table">

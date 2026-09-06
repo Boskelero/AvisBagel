@@ -453,6 +453,32 @@ class DropOrderingTests(TestCase):
         self.assertEqual(filtered.context["page_obj"].paginator.count, 1)
         self.assertEqual(filtered.context["selected_status"], "active")
 
+        order_defaults = {
+            "customer_name": "Repeat Buyer",
+            "phone": "0501234567",
+            "fulfillment_type": Order.FULFILLMENT_PICKUP,
+            "payment_method": Order.PAYMENT_PAY_ON_PICKUP,
+            "status": Order.STATUS_PAID,
+            "drop": self.drop,
+            "bagel_quantity": 1,
+            "total_cents": 1200,
+        }
+        Order.objects.create(number="ABREPEAT001", email="PERSON01@example.com", **order_defaults)
+        Order.objects.create(number="ABREPEAT002", email="person01@example.com", **order_defaults)
+
+        customer_subscriber = client.get(
+            reverse("drops:staff_subscribers"), {"q": "person01@example.com"}
+        )
+        self.assertTrue(customer_subscriber.context["subscribers"][0].is_customer)
+        self.assertContains(customer_subscriber, "Customer")
+
+        repeat_customers = client.get(
+            reverse("drops:staff_customers"), {"customer_type": "repeat"}
+        )
+        self.assertEqual(repeat_customers.context["page_obj"].paginator.count, 1)
+        self.assertEqual(repeat_customers.context["customers"][0]["order_count"], 2)
+        self.assertEqual(repeat_customers.context["selected_customer_type"], "repeat")
+
         export = client.get(reverse("drops:staff_subscribers_excel"))
         self.assertEqual(
             export["Content-Type"],
