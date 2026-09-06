@@ -14,6 +14,7 @@ from PIL import Image
 
 from bagel_shop.apps.catalog.models import Category, Product
 from bagel_shop.apps.blog.models import Post
+from bagel_shop.apps.core.models import PageMetadata
 from bagel_shop.apps.orders.models import Order
 from bagel_shop.apps.notifications.models import (
     CateringInquiry,
@@ -306,6 +307,44 @@ class DropOrderingTests(TestCase):
         self.assertContains(dashboard, "Total order value")
         self.assertContains(dashboard, "Previous Drops")
         self.assertNotContains(dashboard, "Duplicate")
+
+    def test_staff_page_editor_loads_rich_editor_and_sanitizes_content(self):
+        staff = get_user_model().objects.create_user(username="page-editor", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+        page, _ = PageMetadata.objects.get_or_create(page_key=PageMetadata.PAGE_BLOG)
+        for page_key, _ in PageMetadata.PAGE_CHOICES:
+            PageMetadata.objects.get_or_create(page_key=page_key)
+        pages = list(PageMetadata.objects.order_by("id"))
+        data = {
+            "form-TOTAL_FORMS": len(pages),
+            "form-INITIAL_FORMS": len(pages),
+            "form-MIN_NUM_FORMS": 0,
+            "form-MAX_NUM_FORMS": 1000,
+        }
+        for index, item in enumerate(pages):
+            data.update({
+                f"form-{index}-id": item.id,
+                f"form-{index}-heading_en": "Bagel journal" if item.id == page.id else "",
+                f"form-{index}-intro_en": "Stories from the bakery" if item.id == page.id else "",
+                f"form-{index}-content_en": "<p>Safe</p><script>alert(1)</script>" if item.id == page.id else "",
+                f"form-{index}-heading_he": "",
+                f"form-{index}-intro_he": "",
+                f"form-{index}-content_he": "",
+                f"form-{index}-meta_title": "",
+                f"form-{index}-meta_description": "",
+            })
+
+        response = client.post(reverse("drops:staff_seo"), data)
+
+        self.assertRedirects(response, reverse("drops:staff_seo"))
+        page.refresh_from_db()
+        self.assertEqual(page.heading_en, "Bagel journal")
+        self.assertIn("<p>Safe</p>", page.content_en)
+        self.assertNotIn("<script", page.content_en)
+        editor_page = client.get(reverse("drops:staff_seo"))
+        self.assertContains(editor_page, "/ckeditor5/43.3.1/ckeditor5.umd.js")
+        self.assertContains(editor_page, "Visible page content")
 
     def test_staff_inquiry_inbox_filters_and_prepares_email_replies(self):
         staff = get_user_model().objects.create_user(

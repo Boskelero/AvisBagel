@@ -554,9 +554,12 @@ def staff_seo(request):
     formset = MetadataFormSet(request.POST or None, queryset=PageMetadata.objects.all())
     if request.method == "POST" and formset.is_valid():
         formset.save()
-        messages.success(request, "Page titles and descriptions updated.")
+        messages.success(request, "Page content and search metadata updated.")
         return redirect("drops:staff_seo")
-    return render(request, "drops/staff_seo.html", {"formset": formset})
+    return render(request, "drops/staff_seo.html", {
+        "formset": formset,
+        "ckeditor_version": settings.CKEDITOR_VERSION,
+    })
 
 
 @staff_member_required

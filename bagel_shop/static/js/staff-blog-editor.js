@@ -1,5 +1,5 @@
 (function () {
-    const form = document.getElementById('staff-blog-form');
+    const form = document.querySelector('.js-rich-editor-form');
     if (!form || !window.CKEDITOR) return;
 
     const uploadUrl = form.dataset.uploadUrl;
@@ -11,7 +11,9 @@
         Table, TableToolbar, Undo
     } = window.CKEDITOR;
 
-    document.querySelectorAll('.js-rich-editor').forEach((element) => {
+    const initializeEditor = (element) => {
+        if (element.dataset.editorReady === 'true') return;
+        element.dataset.editorReady = 'true';
         ClassicEditor.create(element, {
             plugins: [
                 Alignment, Autoformat, BlockQuote, Bold, Essentials, Heading, Image,
@@ -45,7 +47,21 @@
                 });
             }
         }).catch((error) => {
-            console.error('Could not initialize the blog editor.', error);
+            delete element.dataset.editorReady;
+            console.error('Could not initialize the rich-text editor.', error);
+        });
+    };
+
+    const initializeVisibleEditors = (root = document) => {
+        root.querySelectorAll('.js-rich-editor').forEach((element) => {
+            if (element.offsetParent !== null) initializeEditor(element);
+        });
+    };
+
+    initializeVisibleEditors();
+    document.querySelectorAll('.staff-page-editor').forEach((panel) => {
+        panel.addEventListener('toggle', () => {
+            if (panel.open) initializeVisibleEditors(panel);
         });
     });
 }());

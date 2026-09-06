@@ -32,6 +32,32 @@ class CateringInquiryTests(TestCase):
         self.assertContains(response, reverse("pages:catering"))
         self.assertNotContains(response, "Order now")
 
+    def test_visible_page_copy_uses_managed_content(self):
+        PageMetadata.objects.update_or_create(
+            page_key=PageMetadata.PAGE_BLOG,
+            defaults={
+                "heading_en": "Notes from Avi's oven",
+                "intro_en": "Fresh stories from each weekly bake.",
+                "content_en": "<p>Meet the people and ingredients behind every Drop.</p>",
+            },
+        )
+
+        response = self.client.get(reverse("blog:post_list"))
+
+        self.assertContains(response, "Notes from Avi&#x27;s oven")
+        self.assertContains(response, "Fresh stories from each weekly bake.")
+        self.assertContains(response, "Meet the people and ingredients behind every Drop.")
+
+    def test_catering_page_is_in_navigation_and_has_full_request_flow(self):
+        response = self.client.get(reverse("pages:catering"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="/en/catering/"')
+        self.assertContains(response, "Bring better bagels to the table.")
+        self.assertContains(response, "Plan my order")
+        self.assertContains(response, "Pickup only for now")
+        self.assertContains(response, "Send catering request")
+
     def test_customer_can_submit_regular_contact_message(self):
         response = self.client.post(
             reverse("pages:contact"),

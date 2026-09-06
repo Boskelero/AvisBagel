@@ -70,6 +70,14 @@
 </section>
 {% endif %}
 
+{% if PAGE_META.heading_i18n or PAGE_META.intro_i18n or PAGE_META.content_i18n %}
+<section class="page-managed-intro mb-5">
+    {% if PAGE_META.heading_i18n %}<h2>{{ PAGE_META.heading_i18n }}</h2>{% endif %}
+    {% if PAGE_META.intro_i18n %}<p class="lead">{{ PAGE_META.intro_i18n }}</p>{% endif %}
+    {% if PAGE_META.content_i18n %}<div class="page-rich-content">{{ PAGE_META.content_i18n|safe }}</div>{% endif %}
+</section>
+{% endif %}
+
 <section class="mb-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h3 fw-bold mb-0">{% trans "Featured bagels" %}</h2>

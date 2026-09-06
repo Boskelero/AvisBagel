@@ -1,42 +1,59 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% if PAGE_META.meta_title %}{{ PAGE_META.meta_title }}{% else %}{% trans "Catering and large orders" %} | {{ SITE_NAME }}{% endif %}{% endblock %}
 
 {% block content %}
-<section class="contact-choice mb-4">
-    <div>
-        <span class="text-uppercase small fw-bold text-muted">{% trans "Events and advance orders" %}</span>
-        <h1 class="display-6 fw-bold mb-2">{% trans "Catering and large orders" %}</h1>
-        <p class="text-muted mb-0">{% trans "Planning a happy hour, party, office order, or simcha? Tell Avi what you need and we will coordinate it directly." %}</p>
+<section class="catering-page-hero mb-5">
+    <div class="catering-page-copy">
+        <span class="catering-page-eyebrow">{% trans "Events · offices · celebrations" %}</span>
+        <h1>{% if PAGE_META.heading_i18n %}{{ PAGE_META.heading_i18n }}{% else %}{% trans "Bring better bagels to the table." %}{% endif %}</h1>
+        <p>{% if PAGE_META.intro_i18n %}{{ PAGE_META.intro_i18n }}{% else %}{% trans "From office breakfasts to simchas and private parties, tell Avi what you are planning and we will shape the order around your event." %}{% endif %}</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="#catering-request" class="btn btn-dark btn-lg">{% trans "Plan my order" %}</a>
+            <a href="{% url 'catalog:menu' %}" class="btn btn-outline-dark btn-lg">{% trans "Browse the menu" %}</a>
+        </div>
     </div>
-    <a href="{% url 'pages:contact' %}" class="contact-switch-card">
-        <span>{% trans "Have a regular question?" %}</span>
-        <strong>{% trans "Go to customer contact" %} →</strong>
-    </a>
+    <div class="catering-page-image">
+        <img src="{% static 'images/bagel-section-11.jpg' %}" alt="{% trans 'Abu Avi Bagels catering spread' %}">
+    </div>
 </section>
 
-<section class="row g-4 align-items-start">
-    <div class="col-lg-4">
-        <div class="contact-info-card catering-info-card">
-            <h2 class="h5 fw-bold">{% trans "Tell us what you're planning" %}</h2>
-            <p class="text-muted">{% trans "Use this form for orders beyond the active Drop limit, offices, celebrations, and future dates." %}</p>
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2">✓ {% trans "Office breakfasts and happy hours" %}</li>
-                <li class="mb-2">✓ {% trans "Parties and simchas" %}</li>
-                <li>✓ {% trans "Large advance orders" %}</li>
-            </ul>
-        </div>
+<section class="catering-assurances mb-5" aria-label="{% trans 'Catering highlights' %}">
+    <div><span>01</span><strong>{% trans "Made for your event" %}</strong><p>{% trans "We help plan quantities and a bagel mix that fits your group." %}</p></div>
+    <div><span>02</span><strong>{% trans "Prepared fresh" %}</strong><p>{% trans "Every order is hand-rolled and baked for the arranged pickup." %}</p></div>
+    <div><span>03</span><strong>{% trans "Coordinated directly" %}</strong><p>{% trans "Large orders sit outside the weekly Drop cap, so details stay flexible." %}</p></div>
+</section>
+
+{% if PAGE_META.content_i18n %}<section class="page-rich-content catering-managed-content mb-5">{{ PAGE_META.content_i18n|safe }}</section>{% endif %}
+
+<section class="catering-occasions mb-5">
+    <div class="catering-section-heading"><span>{% trans "A good fit for" %}</span><h2>{% trans "Gatherings of every kind." %}</h2></div>
+    <div class="row g-3">
+        <div class="col-md-4"><article><strong>{% trans "Work & teams" %}</strong><p>{% trans "Office breakfasts, team meetings, launches, and happy hours." %}</p></article></div>
+        <div class="col-md-4"><article><strong>{% trans "Family & friends" %}</strong><p>{% trans "Birthdays, brunches, holidays, and relaxed weekend gatherings." %}</p></article></div>
+        <div class="col-md-4"><article><strong>{% trans "Celebrations" %}</strong><p>{% trans "Simchas, community events, and other meaningful occasions." %}</p></article></div>
     </div>
-    <div class="col-lg-8">
-        <div class="p-4 p-md-5 border rounded-4 bg-white">
-            <h2 class="h4 fw-bold mb-4">{% trans "Request catering" %}</h2>
-            <form method="post">
-                {% csrf_token %}
-                <div class="row g-3">{% for field in form %}<div class="{% if field.name == 'message' %}col-12{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
-                <button class="btn btn-accent mt-4" type="submit">{% trans "Send catering inquiry" %}</button>
-            </form>
+</section>
+
+<section id="catering-request" class="catering-request-shell">
+    <div class="catering-request-intro">
+        <span>{% trans "Start the conversation" %}</span>
+        <h2>{% trans "Tell us what you are planning." %}</h2>
+        <p>{% trans "Share the date and an estimated quantity. Avi will follow up directly to confirm availability, the menu, pickup, and final pricing." %}</p>
+        <div class="catering-request-note">
+            <strong>{% trans "Pickup only for now" %}</strong>
+            <p>{% trans "Regular pickup is from" %} {{ SITE_ADDRESS }}. {% trans "We will confirm the exact window with your order." %}</p>
         </div>
+        <a href="{% url 'pages:contact' %}" class="catering-regular-contact">{% trans "Just have a regular question? Contact us here" %} →</a>
+    </div>
+    <div class="catering-request-form">
+        <h2>{% trans "Request catering" %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">{% for field in form %}<div class="{% if field.name == 'message' %}col-12{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+            <button class="btn btn-accent btn-lg mt-4" type="submit">{% trans "Send catering request" %}</button>
+        </form>
     </div>
 </section>
 {% endblock %}

@@ -1276,6 +1276,149 @@ textarea:focus {
     color: rgba(47, 42, 36, 0.72) !important;
 }
 
+.page-managed-intro,
+.page-rich-content {
+    color: #5f5146;
+}
+
+.page-managed-intro {
+    max-width: 850px;
+    padding: 2rem;
+    border: 1px solid #ead9c5;
+    border-radius: 1.4rem;
+    background: #fffaf3;
+}
+
+.page-managed-intro h2 { color: var(--ink); font-weight: 800; }
+.page-rich-content > :last-child { margin-bottom: 0; }
+.page-rich-content img { max-width: 100%; height: auto; border-radius: 1rem; }
+
+.catering-page-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+    min-height: 520px;
+    overflow: hidden;
+    border-radius: 2rem;
+    background: #f2c9a9;
+}
+
+.catering-page-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: clamp(2rem, 5vw, 5rem);
+}
+
+.catering-page-eyebrow,
+.catering-section-heading span,
+.catering-request-intro > span {
+    color: #a94b13;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.catering-page-copy h1 {
+    max-width: 760px;
+    margin: 0.75rem 0 1.25rem;
+    font-size: clamp(3rem, 5.8vw, 5.6rem);
+    font-weight: 800;
+    letter-spacing: -0.065em;
+    line-height: 0.95;
+}
+
+.catering-page-copy > p {
+    max-width: 650px;
+    margin-bottom: 1.75rem;
+    color: #5e4535;
+    font-size: 1.08rem;
+}
+
+.catering-page-image { min-height: 420px; }
+.catering-page-image img { width: 100%; height: 100%; object-fit: cover; }
+
+.catering-assurances {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-block: 1px solid #dfcdb8;
+}
+
+.catering-assurances > div { padding: 1.75rem; }
+.catering-assurances > div + div { border-inline-start: 1px solid #dfcdb8; }
+.catering-assurances span { display: block; margin-bottom: 1rem; color: #d66622; font-size: 0.72rem; font-weight: 800; }
+.catering-assurances strong { display: block; margin-bottom: 0.45rem; font-size: 1.05rem; }
+.catering-assurances p { margin: 0; color: #766659; font-size: 0.9rem; }
+
+.catering-managed-content {
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border-radius: 1.5rem;
+    background: #fff;
+}
+
+.catering-section-heading { margin-bottom: 1.5rem; }
+.catering-section-heading h2 { margin: 0.35rem 0 0; font-size: clamp(2rem, 4vw, 3.4rem); font-weight: 800; letter-spacing: -0.045em; }
+.catering-occasions article { height: 100%; padding: 1.7rem; border: 1px solid #e5d3bf; border-radius: 1.25rem; background: #fffaf4; }
+.catering-occasions article strong { display: block; margin-bottom: 0.5rem; font-size: 1.15rem; }
+.catering-occasions article p { margin: 0; color: #78695c; }
+
+.catering-request-shell {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.25fr);
+    overflow: hidden;
+    border-radius: 1.75rem;
+    background: #22282d;
+}
+
+.catering-request-intro { padding: clamp(2rem, 4vw, 3.5rem); color: #fff; }
+.catering-request-intro h2 { margin: 0.5rem 0 1rem; font-size: clamp(2rem, 3.6vw, 3.4rem); font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+.catering-request-intro > p { color: rgba(255,255,255,.72); }
+.catering-request-note { margin-top: 2rem; padding: 1.25rem; border-radius: 1rem; background: rgba(255,255,255,.08); }
+.catering-request-note p { margin: 0.35rem 0 0; color: rgba(255,255,255,.7); font-size: 0.88rem; }
+.catering-regular-contact { display: inline-block; margin-top: 1.5rem; color: #f2c9a9; font-weight: 700; }
+.catering-regular-contact:hover { color: #fff; }
+.catering-request-form { padding: clamp(2rem, 4vw, 3.5rem); background: #fff; }
+.catering-request-form h2 { margin-bottom: 1.5rem; font-size: 1.5rem; font-weight: 800; }
+
+.staff-page-editor-list { display: grid; gap: 0.9rem; }
+.staff-page-editor { overflow: hidden; border: 1px solid #dfd2c3; border-radius: 1.1rem; background: #fff; }
+.staff-page-editor summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.15rem 1.35rem; cursor: pointer; list-style: none; }
+.staff-page-editor summary::-webkit-details-marker { display: none; }
+.staff-page-editor summary::after { content: '+'; display: grid; place-items: center; width: 2rem; height: 2rem; margin-inline-start: auto; border-radius: 50%; background: #f3eadf; font-weight: 800; }
+.staff-page-editor[open] summary::after { content: '−'; background: var(--accent); color: #fff; }
+.staff-page-editor summary span:first-child { display: flex; flex-direction: column; }
+.staff-page-editor summary small { color: #8b7664; font-size: 0.62rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.staff-page-editor summary strong { font-size: 1.08rem; }
+.staff-page-editor-path { color: #79695c; font-size: .84rem; font-weight: 700; }
+.staff-page-editor-body { padding: 1.5rem; border-top: 1px solid #eadfd2; }
+.staff-page-editor-section-heading { display: flex; gap: .9rem; margin-bottom: 1.25rem; }
+.staff-page-editor-section-heading > span { display: grid; place-items: center; flex: 0 0 2rem; width: 2rem; height: 2rem; border-radius: .65rem; background: #f2c9a9; font-size: .7rem; font-weight: 800; }
+.staff-page-editor-section-heading h2 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+.staff-page-editor-section-heading p { margin: .2rem 0 0; color: #7b6c60; font-size: .82rem; }
+.staff-language-title { padding-bottom: .6rem; border-bottom: 1px solid #ede3d8; font-size: .76rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.staff-page-seo-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid #eadfd2; }
+.staff-save-bar { position: sticky; bottom: 1rem; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1.25rem; padding: .85rem 1rem; border-radius: 1rem; background: #22282d; color: #fff; box-shadow: 0 14px 35px rgba(34,40,45,.22); }
+.staff-save-bar span { color: rgba(255,255,255,.7); font-size: .82rem; }
+
+@media (max-width: 991.98px) {
+    .catering-page-hero,
+    .catering-request-shell { grid-template-columns: 1fr; }
+    .catering-page-image { order: -1; min-height: 300px; max-height: 380px; }
+}
+
+@media (max-width: 767.98px) {
+    .catering-page-hero { border-radius: 1.35rem; }
+    .catering-page-copy h1 { font-size: clamp(2.65rem, 13vw, 4rem); }
+    .catering-assurances { grid-template-columns: 1fr; }
+    .catering-assurances > div + div { border-inline-start: 0; border-top: 1px solid #dfcdb8; }
+    .staff-page-editor summary { padding: 1rem; }
+    .staff-page-editor-body { padding: 1rem; }
+    .staff-page-editor-path { display: none; }
+    .staff-save-bar { align-items: stretch; flex-direction: column; }
+    .staff-save-bar .btn { width: 100%; }
+}
+
 .staff-login-topbar {
     padding-top: 0.75rem;
 }

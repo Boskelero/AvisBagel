@@ -6,10 +6,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="display-6 fw-bold mb-1">{% trans "Our menu" %}</h1>
-        <p class="text-muted mb-0">{% trans "Browse our bagels and seasonal specials. Availability changes with each Drop." %}</p>
+        <h1 class="display-6 fw-bold mb-1">{% if PAGE_META.heading_i18n %}{{ PAGE_META.heading_i18n }}{% else %}{% trans "Our menu" %}{% endif %}</h1>
+        <p class="text-muted mb-0">{% if PAGE_META.intro_i18n %}{{ PAGE_META.intro_i18n }}{% else %}{% trans "Browse our bagels and seasonal specials. Availability changes with each Drop." %}{% endif %}</p>
     </div>
 </div>
+
+{% if PAGE_META.content_i18n %}<section class="page-rich-content mb-4">{{ PAGE_META.content_i18n|safe }}</section>{% endif %}
 
 {% if featured_drop %}
     <div class="alert {% if active_drop %}alert-success{% else %}alert-warning{% endif %} rounded-4 mb-4">

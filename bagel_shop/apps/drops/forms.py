@@ -3,6 +3,7 @@ from django.db import transaction
 from django.forms import BaseModelFormSet
 
 from bagel_shop.apps.catalog.models import Category, Product, ProductImage
+from bagel_shop.apps.blog.sanitizers import sanitize_article_html
 from bagel_shop.apps.core.models import PageMetadata
 from bagel_shop.apps.core.uploads import validate_image_upload
 
@@ -36,15 +37,34 @@ class CategoryForm(forms.ModelForm):
 class PageMetadataForm(forms.ModelForm):
     class Meta:
         model = PageMetadata
-        fields = ("meta_title", "meta_description")
+        fields = (
+            "heading_en", "intro_en", "content_en",
+            "heading_he", "intro_he", "content_he",
+            "meta_title", "meta_description",
+        )
         labels = {
+            "heading_en": "English page heading",
+            "intro_en": "English introduction",
+            "content_en": "English page content",
+            "heading_he": "Hebrew page heading",
+            "intro_he": "Hebrew introduction",
+            "content_he": "Hebrew page content",
             "meta_title": "Meta title",
             "meta_description": "Meta description",
         }
-        widgets = {"meta_description": forms.Textarea(attrs={"rows": 3})}
+        widgets = {
+            "intro_en": forms.Textarea(attrs={"rows": 3}),
+            "content_en": forms.Textarea(attrs={"rows": 8, "class": "form-control js-rich-editor"}),
+            "intro_he": forms.Textarea(attrs={"rows": 3, "dir": "rtl"}),
+            "content_he": forms.Textarea(attrs={"rows": 8, "class": "form-control js-rich-editor", "dir": "rtl", "data-direction": "rtl"}),
+            "meta_description": forms.Textarea(attrs={"rows": 3}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if field_name not in {"content_en", "content_he"}:
+                field.widget.attrs.setdefault("class", "form-control")
         self.fields["meta_title"].widget.attrs.update({
             "class": "form-control",
             "maxlength": 160,
@@ -55,6 +75,12 @@ class PageMetadataForm(forms.ModelForm):
             "maxlength": 320,
             "placeholder": "Short summary shown by search engines and social previews",
         })
+
+    def clean_content_en(self):
+        return sanitize_article_html(self.cleaned_data.get("content_en", ""))
+
+    def clean_content_he(self):
+        return sanitize_article_html(self.cleaned_data.get("content_he", ""))
 
 
 class ProductForm(forms.ModelForm):

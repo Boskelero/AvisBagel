@@ -6,9 +6,9 @@
 {% block content %}
 <section class="row g-4 align-items-center">
     <div class="col-lg-6">
-        <h1 class="display-6 fw-bold mb-3">{% trans "Our bakery story" %}</h1>
-        <p class="lead text-muted">{% trans "Avis Bagel started with one oven and a goal: to serve honest bagels with strong local character." %}</p>
-        <p class="text-muted">{% trans "We focus on quality flour, long fermentation, and classic baking techniques with fresh ingredients from local suppliers." %}</p>
+        <h1 class="display-6 fw-bold mb-3">{% if PAGE_META.heading_i18n %}{{ PAGE_META.heading_i18n }}{% else %}{% trans "Our bakery story" %}{% endif %}</h1>
+        <p class="lead text-muted">{% if PAGE_META.intro_i18n %}{{ PAGE_META.intro_i18n }}{% else %}{% trans "Avis Bagel started with one oven and a goal: to serve honest bagels with strong local character." %}{% endif %}</p>
+        {% if PAGE_META.content_i18n %}<div class="page-rich-content">{{ PAGE_META.content_i18n|safe }}</div>{% else %}<p class="text-muted">{% trans "We focus on quality flour, long fermentation, and classic baking techniques with fresh ingredients from local suppliers." %}</p>{% endif %}
     </div>
     <div class="col-lg-6">
         <img src="https://placehold.co/1000x700/f5ecdd/2f2a24?text=Bakery+Team" class="img-fluid rounded-4" alt="Bakery team">

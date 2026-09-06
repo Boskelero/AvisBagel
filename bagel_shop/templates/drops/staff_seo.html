@@ -1,33 +1,61 @@
 {% extends "drops/staff_base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
-{% block title %}{% trans "SEO and page metadata" %} | {{ SITE_NAME }}{% endblock %}
+{% block title %}{% trans "Page content and SEO" %} | {{ SITE_NAME }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/{{ ckeditor_version }}/ckeditor5.css">
+<script src="https://cdn.ckeditor.com/ckeditor5/{{ ckeditor_version }}/ckeditor5.umd.js"></script>
+{% endblock %}
 
 {% block staff_content %}
-<div class="mb-4">
-    <h1 class="display-6 fw-bold mb-1">{% trans "SEO & page metadata" %}</h1>
-    <p class="text-muted mb-0">{% trans "Control how the main website pages appear in browser tabs, search results, and link previews." %}</p>
+<div class="staff-page-heading mb-4">
+    <div><span class="staff-eyebrow">{% trans "Website" %}</span><h1>{% trans "Page content & SEO" %}</h1><p>{% trans "Edit what customers read on each main page and how that page appears in search results." %}</p></div>
 </div>
 
-<form method="post">
+<form method="post" class="js-rich-editor-form" data-upload-url="{% url 'drops:staff_blog_image_upload' %}">
     {% csrf_token %}
     {{ formset.management_form }}
     {% if formset.non_form_errors %}<div class="alert alert-danger">{{ formset.non_form_errors }}</div>{% endif %}
-    <div class="row g-4">
+    <div class="staff-page-editor-list">
         {% for form in formset %}
-        <div class="col-xl-6">
-            <section class="seo-page-card bg-white border rounded-4 p-4 h-100">
+        <details class="staff-page-editor" {% if forloop.first %}open{% endif %}>
+            <summary>
+                <span><small>{% trans "Website page" %}</small><strong>{{ form.instance.get_page_key_display }}</strong></span>
+                <span class="staff-page-editor-path">/{% if form.instance.page_key != 'home' %}{{ form.instance.page_key }}/{% endif %}</span>
+            </summary>
+            <div class="staff-page-editor-body">
                 {{ form.id }}
-                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                    <div><span class="text-uppercase small fw-bold text-muted">{% trans "Static page" %}</span><h2 class="h4 fw-bold mb-0">{{ form.instance.get_page_key_display }}</h2></div>
-                    <span class="badge text-bg-light border">/{{ form.instance.page_key }}/</span>
-                </div>
-                <div class="mb-3"><label class="form-label fw-semibold" for="{{ form.meta_title.id_for_label }}">{{ form.meta_title.label }}</label>{{ form.meta_title }}<div class="form-text">{% trans "Recommended: about 50–60 characters." %}</div>{% for error in form.meta_title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
-                <div><label class="form-label fw-semibold" for="{{ form.meta_description.id_for_label }}">{{ form.meta_description.label }}</label>{{ form.meta_description }}<div class="form-text">{% trans "Recommended: about 140–160 characters." %}</div>{% for error in form.meta_description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</div>
-            </section>
-        </div>
+                <section>
+                    <div class="staff-page-editor-section-heading"><span>01</span><div><h2>{% trans "Visible page content" %}</h2><p>{% trans "The heading and introduction are shown at the top of the page. Long-form content is optional and works best on About and Catering." %}</p></div></div>
+                    <div class="row g-4">
+                        <div class="col-xl-6">
+                            <h3 class="staff-language-title">{% trans "English" %}</h3>
+                            <div class="mb-3"><label class="form-label" for="{{ form.heading_en.id_for_label }}">{{ form.heading_en.label }}</label>{{ form.heading_en }}{{ form.heading_en.errors }}</div>
+                            <div class="mb-3"><label class="form-label" for="{{ form.intro_en.id_for_label }}">{{ form.intro_en.label }}</label>{{ form.intro_en }}{{ form.intro_en.errors }}</div>
+                            <div><label class="form-label" for="{{ form.content_en.id_for_label }}">{{ form.content_en.label }}</label>{{ form.content_en }}{{ form.content_en.errors }}</div>
+                        </div>
+                        <div class="col-xl-6">
+                            <h3 class="staff-language-title">{% trans "Hebrew" %}</h3>
+                            <div class="mb-3"><label class="form-label" for="{{ form.heading_he.id_for_label }}">{{ form.heading_he.label }}</label>{{ form.heading_he }}{{ form.heading_he.errors }}</div>
+                            <div class="mb-3"><label class="form-label" for="{{ form.intro_he.id_for_label }}">{{ form.intro_he.label }}</label>{{ form.intro_he }}{{ form.intro_he.errors }}</div>
+                            <div><label class="form-label" for="{{ form.content_he.id_for_label }}">{{ form.content_he.label }}</label>{{ form.content_he }}{{ form.content_he.errors }}</div>
+                        </div>
+                    </div>
+                </section>
+                <section class="staff-page-seo-section">
+                    <div class="staff-page-editor-section-heading"><span>02</span><div><h2>{% trans "Search & sharing" %}</h2><p>{% trans "This copy is used in browser tabs, Google results, and shared links. It is not displayed as the page heading." %}</p></div></div>
+                    <div class="row g-3">
+                        <div class="col-lg-5"><label class="form-label" for="{{ form.meta_title.id_for_label }}">{{ form.meta_title.label }}</label>{{ form.meta_title }}<div class="form-text">{% trans "Aim for 50–60 characters." %}</div>{{ form.meta_title.errors }}</div>
+                        <div class="col-lg-7"><label class="form-label" for="{{ form.meta_description.id_for_label }}">{{ form.meta_description.label }}</label>{{ form.meta_description }}<div class="form-text">{% trans "Aim for 140–160 characters." %}</div>{{ form.meta_description.errors }}</div>
+                    </div>
+                </section>
+            </div>
+        </details>
         {% endfor %}
     </div>
-    <div class="sticky-bottom py-3 mt-2"><button class="btn btn-accent btn-lg shadow" type="submit">{% trans "Save page metadata" %}</button></div>
+    <div class="staff-save-bar"><span>{% trans "Changes appear on the website immediately after saving." %}</span><button class="btn btn-accent" type="submit">{% trans "Save all page changes" %}</button></div>
 </form>
 {% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/staff-blog-editor.js' %}?v=page-editor-1"></script>{% endblock %}
