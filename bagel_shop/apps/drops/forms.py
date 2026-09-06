@@ -58,9 +58,12 @@ class PageMetadataForm(forms.ModelForm):
 
 
 class ProductForm(forms.ModelForm):
-    price_ils = forms.DecimalField(max_digits=8, decimal_places=2, min_value=0, label="Single price (₪)")
+    price_ils = forms.DecimalField(
+        max_digits=8, decimal_places=2, min_value=0, required=False, label="Price (₪)"
+    )
     specialty_upcharge_ils = forms.DecimalField(
-        max_digits=8, decimal_places=2, min_value=0, label="Specialty upcharge (₪)", initial=0
+        max_digits=8, decimal_places=2, min_value=0, required=False,
+        label="Specialty upcharge (₪)", initial=0,
     )
     image = forms.ImageField(required=False, help_text="Optional product photo. Uploading a new photo makes it primary.")
     image_alt_text = forms.CharField(required=False, max_length=200, label="Image description")
@@ -104,11 +107,37 @@ class ProductForm(forms.ModelForm):
             validate_image_upload(image)
         return image
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if (
+            cleaned_data.get("product_type") == Product.TYPE_EXTRA
+            and cleaned_data.get("price_ils") is None
+        ):
+            self.add_error("price_ils", "Enter a price for this extra item.")
+        if (
+            cleaned_data.get("product_type") == Product.TYPE_BAGEL
+            and not BagelPriceTier.objects.filter(quantity=1, is_active=True).exists()
+        ):
+            self.add_error(
+                "product_type",
+                "Add an active single-bagel price on the Pricing page first.",
+            )
+        return cleaned_data
+
     @transaction.atomic
     def save(self, commit=True):
         product = super().save(commit=False)
-        product.price_cents = int(self.cleaned_data["price_ils"] * 100)
-        product.specialty_upcharge_cents = int(self.cleaned_data["specialty_upcharge_ils"] * 100)
+        if product.product_type == Product.TYPE_BAGEL:
+            single_price_cents = BagelPriceTier.objects.get(
+                quantity=1, is_active=True
+            ).price_cents
+            product.specialty_upcharge_cents = int(
+                (self.cleaned_data.get("specialty_upcharge_ils") or 0) * 100
+            )
+            product.price_cents = single_price_cents + product.specialty_upcharge_cents
+        else:
+            product.price_cents = int(self.cleaned_data["price_ils"] * 100)
+            product.specialty_upcharge_cents = 0
         if commit:
             product.save()
             image = self.cleaned_data.get("image")

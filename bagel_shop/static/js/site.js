@@ -212,9 +212,37 @@ function initFlashMessages() {
     });
 }
 
+function initProductForms() {
+    document.querySelectorAll('[data-product-form]').forEach((form) => {
+        const typeSelect = form.querySelector('[name="product_type"]');
+        const priceField = form.querySelector('[data-extra-price-field]');
+        const upchargeField = form.querySelector('[data-bagel-upcharge-field]');
+        const bagelNote = form.querySelector('[data-bagel-price-note]');
+        if (!typeSelect) return;
+
+        const update = () => {
+            const isBagel = typeSelect.value === 'bagel';
+            if (priceField) {
+                priceField.hidden = isBagel;
+                const input = priceField.querySelector('input');
+                if (input) input.disabled = isBagel;
+            }
+            if (upchargeField) {
+                upchargeField.hidden = !isBagel;
+                const input = upchargeField.querySelector('input');
+                if (input) input.disabled = !isBagel;
+            }
+            if (bagelNote) bagelNote.hidden = !isBagel;
+        };
+        typeSelect.addEventListener('change', update);
+        update();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     initHeroRotators();
     initDropCountdowns();
     initDropOrderForms();
     initFlashMessages();
+    initProductForms();
 });

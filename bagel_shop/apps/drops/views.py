@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, F, Q, Sum
 from django.forms import modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
@@ -299,6 +299,17 @@ def staff_products(request):
     if query:
         products = products.filter(Q(name_en__icontains=query) | Q(name_he__icontains=query))
     page_obj = _paginate(request, products)
+    single_price_cents = (
+        BagelPriceTier.objects.filter(quantity=1, is_active=True)
+        .values_list("price_cents", flat=True)
+        .first()
+    )
+    for product in page_obj:
+        product.staff_price_cents = (
+            single_price_cents + product.specialty_upcharge_cents
+            if product.product_type == Product.TYPE_BAGEL and single_price_cents is not None
+            else product.price_cents
+        )
     return render(request, "drops/staff_products.html", {
         "products": page_obj, "page_obj": page_obj, "query": query, "show_all": show_all
     })
@@ -437,6 +448,15 @@ def staff_pricing(request):
     formset = TierFormSet(request.POST or None, queryset=BagelPriceTier.objects.order_by("quantity"))
     if request.method == "POST" and formset.is_valid():
         formset.save()
+        single_price_cents = (
+            BagelPriceTier.objects.filter(quantity=1, is_active=True)
+            .values_list("price_cents", flat=True)
+            .first()
+        )
+        if single_price_cents is not None:
+            Product.objects.filter(product_type=Product.TYPE_BAGEL).update(
+                price_cents=single_price_cents + F("specialty_upcharge_cents")
+            )
         messages.success(request, "Bagel deal pricing updated.")
         return redirect("drops:staff_pricing")
     return render(request, "drops/staff_pricing.html", {"formset": formset})
@@ -776,11 +796,20 @@ def staff_customers_excel(request):
 @staff_member_required
 def staff_products_excel(request):
     products = Product.objects.select_related("category").order_by("product_type", "name")
+    single_price_cents = (
+        BagelPriceTier.objects.filter(quantity=1, is_active=True)
+        .values_list("price_cents", flat=True)
+        .first()
+    )
     rows = [[
         product.name_en or product.name,
         str(product.category),
         product.get_product_type_display(),
-        product.price_cents / 100,
+        (
+            single_price_cents + product.specialty_upcharge_cents
+            if product.product_type == Product.TYPE_BAGEL and single_price_cents is not None
+            else product.price_cents
+        ) / 100,
         product.specialty_upcharge_cents / 100,
         "Active" if product.is_active else "Hidden",
         "Yes" if product.is_featured else "No",

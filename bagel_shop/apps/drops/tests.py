@@ -407,7 +407,7 @@ class DropOrderingTests(TestCase):
                 "description_en": "A rotating special.",
                 "description_he": "",
                 "product_type": Product.TYPE_BAGEL,
-                "price_ils": "14.50",
+                "price_ils": "99.00",
                 "specialty_upcharge_ils": "2.50",
                 "is_active": "on",
             },
@@ -416,6 +416,29 @@ class DropOrderingTests(TestCase):
         product = Product.objects.get(name_en="Weekly Special")
         self.assertEqual(product.price_cents, 1450)
         self.assertEqual(product.specialty_upcharge_cents, 250)
+
+    def test_staff_extra_keeps_an_independent_price(self):
+        staff = get_user_model().objects.create_user(username="extras-owner", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+        response = client.post(
+            reverse("drops:staff_product_create"),
+            {
+                "category": self.plain.category_id,
+                "name_en": "Apricot Jam",
+                "name_he": "",
+                "description_en": "Small batch jam.",
+                "description_he": "",
+                "product_type": Product.TYPE_EXTRA,
+                "price_ils": "18.00",
+                "specialty_upcharge_ils": "9.00",
+                "is_active": "on",
+            },
+        )
+        self.assertRedirects(response, reverse("drops:staff_products"))
+        product = Product.objects.get(name_en="Apricot Jam")
+        self.assertEqual(product.price_cents, 1800)
+        self.assertEqual(product.specialty_upcharge_cents, 0)
 
     def test_staff_can_create_and_publish_a_blog_post(self):
         staff = get_user_model().objects.create_user(username="blog-owner", is_staff=True)
@@ -523,12 +546,21 @@ class DropOrderingTests(TestCase):
             data.update({
                 f"form-{index}-id": tier.id,
                 f"form-{index}-quantity": tier.quantity,
-                f"form-{index}-price_ils": "64.00" if tier.quantity == 6 else f"{tier.price_cents / 100:.2f}",
+                f"form-{index}-price_ils": (
+                    "13.00" if tier.quantity == 1
+                    else "64.00" if tier.quantity == 6
+                    else f"{tier.price_cents / 100:.2f}"
+                ),
                 f"form-{index}-is_active": "on",
             })
         response = client.post(reverse("drops:staff_pricing"), data)
         self.assertRedirects(response, reverse("drops:staff_pricing"))
+        self.assertEqual(BagelPriceTier.objects.get(quantity=1).price_cents, 1300)
         self.assertEqual(BagelPriceTier.objects.get(quantity=6).price_cents, 6400)
+        self.plain.refresh_from_db()
+        self.jalapeno.refresh_from_db()
+        self.assertEqual(self.plain.price_cents, 1300)
+        self.assertEqual(self.jalapeno.price_cents, 1600)
 
     def test_staff_can_send_one_drop_announcement(self):
         NewsletterSubscriber.objects.create(email="subscriber@example.com")
