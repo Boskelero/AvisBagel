@@ -3,7 +3,12 @@ from django.core.mail import send_mail, send_mass_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from .models import DropAlert, DropAnnouncement, NewsletterSubscriber
+from .models import (
+    DropAlert,
+    DropAnnouncement,
+    DropEmailCampaign,
+    NewsletterSubscriber,
+)
 
 
 def subscribe_email(email):
@@ -132,3 +137,85 @@ def send_drop_announcement(drop):
         drop=drop, recipient_count=len(recipients)
     )
     return announcement, True
+
+
+def send_drop_closing_reminder(drop):
+    existing = DropEmailCampaign.objects.filter(
+        drop=drop, campaign_type=DropEmailCampaign.TYPE_CLOSING_SOON
+    ).first()
+    if existing:
+        return existing, False
+    recipients = list(
+        NewsletterSubscriber.objects.filter(is_active=True).values_list("email", flat=True)
+    )
+    closes_at = timezone.localtime(drop.closes_at)
+    message = (
+        f"Only one hour remains to order from {drop.name}.\n\n"
+        f"Ordering closes: {closes_at:%Y-%m-%d at %H:%M}\n"
+        f"Order here: {settings.SITE_URL.rstrip('/')}/en/drops/order/"
+    )
+    emails = [
+        (
+            f"One hour left to order — {drop.name}",
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+        )
+        for email in recipients
+    ]
+    if emails:
+        send_mass_mail(emails, fail_silently=False)
+    campaign = DropEmailCampaign.objects.create(
+        drop=drop,
+        campaign_type=DropEmailCampaign.TYPE_CLOSING_SOON,
+        recipient_count=len(recipients),
+    )
+    return campaign, True
+
+
+def send_drop_orders_ready(drop):
+    existing = DropEmailCampaign.objects.filter(
+        drop=drop, campaign_type=DropEmailCampaign.TYPE_ORDERS_READY
+    ).first()
+    if existing:
+        return existing, False
+    orders = (
+        drop.orders.exclude(status__in=["draft", "canceled"])
+        .only("number", "customer_name", "email")
+        .order_by("email", "number")
+    )
+    customers = {}
+    for order in orders:
+        key = order.email.strip().lower()
+        customer = customers.setdefault(
+            key,
+            {"email": order.email, "name": order.customer_name, "orders": []},
+        )
+        customer["orders"].append(order.number)
+    pickup_starts_at = timezone.localtime(drop.pickup_starts_at)
+    pickup_ends_at = timezone.localtime(drop.pickup_ends_at)
+    emails = []
+    for customer in customers.values():
+        order_numbers = ", ".join(customer["orders"])
+        emails.append(
+            (
+                "Your Abu Avi Bagels order is ready",
+                (
+                    f"Hi {customer['name']},\n\n"
+                    f"Your order ({order_numbers}) is ready for pickup.\n"
+                    f"Pickup: {pickup_starts_at:%Y-%m-%d %H:%M}–{pickup_ends_at:%H:%M}\n"
+                    f"Location: {drop.pickup_location}\n\n"
+                    "See you soon!"
+                ),
+                settings.DEFAULT_FROM_EMAIL,
+                [customer["email"]],
+            )
+        )
+    if emails:
+        send_mass_mail(emails, fail_silently=False)
+    campaign = DropEmailCampaign.objects.create(
+        drop=drop,
+        campaign_type=DropEmailCampaign.TYPE_ORDERS_READY,
+        recipient_count=len(customers),
+    )
+    return campaign, True

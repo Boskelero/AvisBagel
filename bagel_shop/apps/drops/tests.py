@@ -15,7 +15,12 @@ from PIL import Image
 from bagel_shop.apps.catalog.models import Category, Product
 from bagel_shop.apps.blog.models import Post
 from bagel_shop.apps.orders.models import Order
-from bagel_shop.apps.notifications.models import DropAlert, DropAnnouncement, NewsletterSubscriber
+from bagel_shop.apps.notifications.models import (
+    DropAlert,
+    DropAnnouncement,
+    DropEmailCampaign,
+    NewsletterSubscriber,
+)
 from bagel_shop.apps.notifications.services import notify_owner_about_drop_capacity
 
 from .models import BagelPriceTier, Drop, DropProduct, DropReservation
@@ -217,7 +222,7 @@ class DropOrderingTests(TestCase):
         self.assertContains(response, 'value="1" data-bagel-quantity')
         self.assertContains(response, "up to 12 bagels per order")
 
-    def test_staff_dashboard_requires_staff_and_can_duplicate_drop(self):
+    def test_staff_dashboard_and_core_pages_require_staff(self):
         anonymous = Client()
         response = anonymous.get(reverse("drops:staff_dashboard"))
         self.assertEqual(response.status_code, 302)
@@ -253,12 +258,32 @@ class DropOrderingTests(TestCase):
         self.assertTrue(
             client.get(reverse("drops:staff_excel", args=[self.drop.id])).content.startswith(b"PK")
         )
-        response = client.post(reverse("drops:staff_duplicate", args=[self.drop.id]))
-        duplicate = Drop.objects.exclude(pk=self.drop.pk).get()
-        self.assertRedirects(response, reverse("drops:staff_edit", args=[duplicate.id]))
-        self.assertEqual(duplicate.status, Drop.STATUS_DRAFT)
-        self.assertEqual(duplicate.product_entries.count(), 2)
-        self.assertEqual(duplicate.opens_at, self.drop.opens_at + timedelta(days=7))
+        dashboard = client.get(reverse("drops:staff_dashboard"))
+        self.assertContains(dashboard, "Total order value")
+        self.assertContains(dashboard, "Previous Drops")
+        self.assertNotContains(dashboard, "Duplicate")
+
+    def test_previous_drops_have_their_own_paginator(self):
+        for index in range(7):
+            Drop.objects.create(
+                name=f"Previous Drop {index}",
+                status=Drop.STATUS_CLOSED,
+                opens_at=self.drop.opens_at - timedelta(days=index + 8),
+                closes_at=self.drop.closes_at - timedelta(days=index + 8),
+                pickup_starts_at=self.drop.pickup_starts_at - timedelta(days=index + 8),
+                pickup_ends_at=self.drop.pickup_ends_at - timedelta(days=index + 8),
+                pickup_location=self.drop.pickup_location,
+                bagel_capacity=72,
+                max_bagels_per_order=12,
+            )
+        staff = get_user_model().objects.create_user(username="drop-history", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+
+        response = client.get(reverse("drops:staff_dashboard"), {"previous_page": 2})
+
+        self.assertEqual(response.context["previous_drops"].paginator.num_pages, 2)
+        self.assertEqual(response.context["previous_drops"].number, 2)
 
     def test_branded_staff_login_accepts_staff_and_rejects_customers(self):
         staff = get_user_model().objects.create_user(
@@ -352,6 +377,70 @@ class DropOrderingTests(TestCase):
         )
         self.assertContains(response, 'data-auto-dismiss="6000"')
         self.assertContains(response, "btn-close")
+
+    def test_staff_can_set_an_exact_ordering_cutoff(self):
+        staff = get_user_model().objects.create_user(username="cutoff-editor", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+        new_cutoff = timezone.localtime(self.drop.closes_at + timedelta(minutes=30)).replace(
+            second=0, microsecond=0
+        )
+
+        response = client.post(
+            reverse("drops:staff_action", args=[self.drop.id]),
+            {"action": "set_cutoff", "closes_at": new_cutoff.strftime("%Y-%m-%dT%H:%M")},
+        )
+
+        self.assertRedirects(response, reverse("drops:staff_detail", args=[self.drop.id]))
+        self.drop.refresh_from_db()
+        self.assertEqual(timezone.localtime(self.drop.closes_at), new_cutoff)
+
+    def test_drop_email_actions_are_sent_once(self):
+        NewsletterSubscriber.objects.bulk_create([
+            NewsletterSubscriber(email="first@example.com"),
+            NewsletterSubscriber(email="second@example.com"),
+        ])
+        Order.objects.create(
+            number="ABREADY001",
+            customer_name="Ready Customer",
+            email="ready@example.com",
+            phone="0500000000",
+            fulfillment_type=Order.FULFILLMENT_PICKUP,
+            payment_method=Order.PAYMENT_PAY_ON_PICKUP,
+            status=Order.STATUS_PAID,
+            total_cents=6500,
+            bagel_quantity=6,
+            drop=self.drop,
+        )
+        staff = get_user_model().objects.create_user(username="email-operator", is_staff=True)
+        client = Client()
+        client.force_login(staff)
+
+        closing_url = reverse(
+            "drops:staff_email", args=[self.drop.id, DropEmailCampaign.TYPE_CLOSING_SOON]
+        )
+        ready_url = reverse(
+            "drops:staff_email", args=[self.drop.id, DropEmailCampaign.TYPE_ORDERS_READY]
+        )
+        client.post(closing_url)
+        client.post(closing_url)
+        client.post(ready_url)
+        client.post(ready_url)
+
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(self.drop.email_campaigns.count(), 2)
+        self.assertEqual(
+            self.drop.email_campaigns.get(
+                campaign_type=DropEmailCampaign.TYPE_CLOSING_SOON
+            ).recipient_count,
+            2,
+        )
+        self.assertEqual(
+            self.drop.email_campaigns.get(
+                campaign_type=DropEmailCampaign.TYPE_ORDERS_READY
+            ).recipient_count,
+            1,
+        )
 
     def test_demo_seed_is_complete_and_idempotent(self):
         call_command("seed_demo_data", verbosity=0)

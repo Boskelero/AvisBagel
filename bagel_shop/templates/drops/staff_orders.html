@@ -4,13 +4,16 @@
 {% block title %}{% trans "Orders" %} | {{ SITE_NAME }}{% endblock %}
 
 {% block staff_content %}
-<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
-    <div>
-        <h1 class="display-6 fw-bold mb-1">{% trans "Orders" %}</h1>
-        <p class="text-muted mb-0">{% trans "Find and manage orders across every Drop." %}</p>
-    </div>
+<div class="staff-page-heading compact">
+    <div><span class="staff-eyebrow">{% trans "Operations" %}</span><h1>{% trans "Orders" %}</h1><p>{% trans "Find and manage orders across every Drop." %}</p></div>
     <a class="btn btn-outline-dark" href="{% url 'drops:staff_orders_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}">{% trans "Download Excel" %}</a>
 </div>
+
+<section class="staff-metric-grid three-up mb-4">
+    <article class="staff-metric-card"><span>{% trans "Matching orders" %}</span><strong>{{ matching_count }}</strong><small>{% trans "Includes the selected status" %}</small></article>
+    <article class="staff-metric-card is-primary"><span>{% trans "Order value" %}</span><strong>{{ matching_value_cents|shekels }}</strong><small>{% trans "Excludes canceled orders" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Bagels" %}</span><strong>{{ matching_bagels }}</strong><small>{% trans "Across matching active orders" %}</small></article>
+</section>
 
 <form method="get" class="bg-white border rounded-4 p-3 mb-4">
     <div class="row g-2">
@@ -30,20 +33,21 @@
         </div>
     </div>
 </form>
+{% if query or selected_status %}<a class="small d-inline-block mb-3 text-dark" href="{% url 'drops:staff_orders' %}">{% trans "Clear filters" %}</a>{% endif %}
 
-<div class="table-responsive bg-white border rounded-4">
+<div class="table-responsive staff-table-card">
     <table class="table align-middle mb-0">
         <thead><tr><th>{% trans "Order" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Drop / pickup" %}</th><th>{% trans "Status" %}</th><th class="text-end">{% trans "Total" %}</th></tr></thead>
         <tbody>
         {% for order in orders %}
             <tr>
                 <td><a class="fw-semibold" href="{% url 'drops:staff_order_detail' order.id %}">{{ order.number }}</a><br><small class="text-muted">{{ order.created_at|date:"M j, H:i" }}</small></td>
-                <td>{{ order.customer_name }}<br><small class="text-muted">{{ order.phone }}</small></td>
+                <td><strong>{{ order.customer_name }}</strong><br><small class="text-muted">{{ order.phone }} · {{ order.email }}</small></td>
                 <td>{% if order.drop %}<a href="{% url 'drops:staff_detail' order.drop.id %}">{{ order.drop.name }}</a><br><small class="text-muted">{{ order.drop.pickup_starts_at|date:"M j, H:i" }}</small>{% else %}<span class="text-muted">—</span>{% endif %}</td>
                 <td><span class="badge rounded-pill text-bg-{% if order.status == 'canceled' %}secondary{% elif order.status == 'completed' %}success{% elif order.status == 'ready' %}primary{% else %}warning{% endif %}">{{ order.get_status_display }}</span></td>
                 <td class="text-end fw-semibold">{{ order.total_cents|shekels }}</td>
             </tr>
-        {% empty %}<tr><td colspan="5" class="text-muted p-4">{% trans "No orders match these filters." %}</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="5" class="staff-empty-cell">{% trans "No orders match these filters." %}</td></tr>{% endfor %}
         </tbody>
     </table>
 </div>

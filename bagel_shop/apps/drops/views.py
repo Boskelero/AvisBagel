@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum
-from django.forms import modelformset_factory
+from django.forms import DateTimeField, modelformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
@@ -30,9 +30,14 @@ from bagel_shop.apps.cart.services import add_product_to_cart, clear_cart
 from bagel_shop.apps.notifications.models import (
     CateringInquiry,
     ContactInquiry,
+    DropEmailCampaign,
     NewsletterSubscriber,
 )
-from bagel_shop.apps.notifications.services import send_drop_announcement
+from bagel_shop.apps.notifications.services import (
+    send_drop_announcement,
+    send_drop_closing_reminder,
+    send_drop_orders_ready,
+)
 
 from .forms import (
     BagelPriceTierForm,
@@ -240,13 +245,40 @@ def order_current_drop(request):
 
 @staff_member_required
 def staff_dashboard(request):
-    drops = _paginate(request, Drop.objects.all().order_by("-pickup_starts_at"), per_page=12)
+    now = timezone.now()
+    current_drops = (
+        Drop.objects.exclude(status=Drop.STATUS_CLOSED)
+        .filter(Q(status=Drop.STATUS_DRAFT) | Q(pickup_ends_at__gte=now))
+        .order_by("pickup_starts_at")
+    )
+    previous_drops = _paginate(
+        request,
+        Drop.objects.filter(Q(status=Drop.STATUS_CLOSED) | Q(pickup_ends_at__lt=now))
+        .order_by("-pickup_starts_at"),
+        per_page=6,
+        page_param="previous_page",
+    )
+    valid_orders = Order.objects.exclude(
+        status__in=[Order.STATUS_DRAFT, Order.STATUS_CANCELED]
+    )
+    totals = valid_orders.aggregate(
+        order_count=Count("id"),
+        bagel_count=Sum("bagel_quantity"),
+        order_value_cents=Sum("total_cents"),
+        customer_count=Count("email", distinct=True),
+    )
     new_inquiry_count = (
         CateringInquiry.objects.filter(status=CateringInquiry.STATUS_NEW).count()
         + ContactInquiry.objects.filter(status=ContactInquiry.STATUS_NEW).count()
     )
     return render(request, "drops/staff_dashboard.html", {
-        "drops": drops,
+        "current_drops": current_drops,
+        "previous_drops": previous_drops,
+        "page_obj": previous_drops,
+        "order_count": totals["order_count"] or 0,
+        "bagel_count": totals["bagel_count"] or 0,
+        "order_value_cents": totals["order_value_cents"] or 0,
+        "customer_count": totals["customer_count"] or 0,
         "subscriber_count": NewsletterSubscriber.objects.filter(is_active=True).count(),
         "new_inquiry_count": new_inquiry_count,
     })
@@ -255,13 +287,21 @@ def staff_dashboard(request):
 @staff_member_required
 def staff_orders(request):
     orders, query, status, allowed_statuses = _staff_orders_queryset(request)
-    page_obj = _paginate(request, orders)
+    totals = orders.exclude(status=Order.STATUS_CANCELED).aggregate(
+        order_value_cents=Sum("total_cents"),
+        bagel_count=Sum("bagel_quantity"),
+    )
+    matching_count = orders.count()
+    page_obj = _paginate(request, orders, per_page=15)
     return render(request, "drops/staff_orders.html", {
         "orders": page_obj,
         "page_obj": page_obj,
         "query": query,
         "selected_status": status,
         "status_choices": allowed_statuses,
+        "matching_count": matching_count,
+        "matching_value_cents": totals["order_value_cents"] or 0,
+        "matching_bagels": totals["bagel_count"] or 0,
     })
 
 
@@ -607,6 +647,8 @@ def staff_drop_delete(request, drop_id):
         blockers.append("Drops with orders or capacity reservations must be kept for customer history.")
     if hasattr(drop, "announcement"):
         blockers.append("This Drop was announced to subscribers and must be kept for communication history.")
+    if drop.email_campaigns.exists():
+        blockers.append("This Drop has customer email history and must be kept.")
     if request.method == "POST":
         if blockers:
             for blocker in blockers:
@@ -620,36 +662,6 @@ def staff_drop_delete(request, drop_id):
         "drop": drop,
         "blockers": blockers,
     })
-
-
-@staff_member_required
-@require_POST
-def staff_drop_duplicate(request, drop_id):
-    source = get_object_or_404(Drop, pk=drop_id)
-    with transaction.atomic():
-        duplicate = Drop.objects.create(
-            name=f"{source.name} — next week",
-            status=Drop.STATUS_DRAFT,
-            opens_at=source.opens_at + timedelta(days=7),
-            closes_at=source.closes_at + timedelta(days=7),
-            pickup_starts_at=source.pickup_starts_at + timedelta(days=7),
-            pickup_ends_at=source.pickup_ends_at + timedelta(days=7),
-            pickup_location=source.pickup_location,
-            bagel_capacity=source.bagel_capacity,
-            max_bagels_per_order=source.max_bagels_per_order,
-        )
-        DropProduct.objects.bulk_create([
-            DropProduct(
-                drop=duplicate,
-                product=entry.product,
-                is_available=entry.is_available,
-                price_override_cents=entry.price_override_cents,
-                sort_order=entry.sort_order,
-            )
-            for entry in source.product_entries.all()
-        ])
-    messages.success(request, "A draft for next week was created.")
-    return redirect("drops:staff_edit", drop_id=duplicate.id)
 
 
 @staff_member_required
@@ -669,6 +681,13 @@ def staff_drop_action(request, drop_id):
             messages.error(request, "Add at least one active bagel before publishing this Drop.")
             return redirect("drops:staff_detail", drop_id=drop.id)
         drop.status = Drop.STATUS_PUBLISHED
+    elif action == "set_cutoff":
+        cutoff_field = DateTimeField(input_formats=["%Y-%m-%dT%H:%M"])
+        try:
+            drop.closes_at = cutoff_field.clean(request.POST.get("closes_at"))
+        except ValidationError:
+            messages.error(request, "Enter a valid ordering cutoff date and time.")
+            return redirect("drops:staff_detail", drop_id=drop.id)
     elif action == "extend":
         try:
             hours = max(1, min(168, int(request.POST.get("hours", 1))))
@@ -728,16 +747,44 @@ def staff_order_status(request, drop_id, order_id):
 @staff_member_required
 def staff_drop_detail(request, drop_id):
     drop = get_object_or_404(Drop, pk=drop_id)
-    orders = list(drop.orders.prefetch_related("items").order_by("-created_at"))
+    query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip()
+    allowed_statuses = [
+        choice for choice in Order.STATUS_CHOICES if choice[0] != Order.STATUS_DRAFT
+    ]
+    all_orders = drop.orders.exclude(status=Order.STATUS_DRAFT)
+    active_orders = all_orders.exclude(status=Order.STATUS_CANCELED)
+    totals = active_orders.aggregate(
+        order_count=Count("id"),
+        bagel_count=Sum("bagel_quantity"),
+        order_value_cents=Sum("total_cents"),
+    )
+    orders = all_orders.prefetch_related("items").order_by("-created_at")
+    if query:
+        orders = orders.filter(
+            Q(number__icontains=query)
+            | Q(customer_name__icontains=query)
+            | Q(email__icontains=query)
+            | Q(phone__icontains=query)
+        )
+    if status in {value for value, _ in allowed_statuses}:
+        orders = orders.filter(status=status)
+    else:
+        status = ""
+    page_obj = _paginate(request, orders, per_page=10)
+    page_orders = list(page_obj.object_list)
     customer_counts = dict(
-        Order.objects.filter(email__in=[order.email for order in orders])
+        Order.objects.filter(email__in=[order.email for order in page_orders])
         .values_list("email")
         .annotate(total=Count("id"))
     )
-    for order in orders:
+    for order in page_orders:
         order.customer_order_count = customer_counts.get(order.email, 1)
+    page_obj.object_list = page_orders
     bagel_totals, extra_totals = _production_totals(drop)
-    page_obj = _paginate(request, orders)
+    campaigns = {
+        campaign.campaign_type: campaign for campaign in drop.email_campaigns.all()
+    }
     return render(
         request,
         "drops/staff_drop_detail.html",
@@ -747,8 +794,51 @@ def staff_drop_detail(request, drop_id):
             "page_obj": page_obj,
             "bagel_totals": bagel_totals,
             "extra_totals": extra_totals,
+            "query": query,
+            "selected_status": status,
+            "status_choices": allowed_statuses,
+            "order_count": totals["order_count"] or 0,
+            "bagel_count": totals["bagel_count"] or 0,
+            "order_value_cents": totals["order_value_cents"] or 0,
+            "closing_campaign": campaigns.get(DropEmailCampaign.TYPE_CLOSING_SOON),
+            "ready_campaign": campaigns.get(DropEmailCampaign.TYPE_ORDERS_READY),
+            "subscriber_count": NewsletterSubscriber.objects.filter(is_active=True).count(),
+            "ready_recipient_count": active_orders.values("email").distinct().count(),
         },
     )
+
+
+@staff_member_required
+@require_POST
+def staff_drop_email(request, drop_id, campaign_type):
+    drop = get_object_or_404(Drop, pk=drop_id)
+    if campaign_type == DropEmailCampaign.TYPE_CLOSING_SOON:
+        if drop.status != Drop.STATUS_PUBLISHED or timezone.now() >= drop.closes_at:
+            messages.error(request, "The one-hour reminder is only available while ordering is open.")
+            return redirect("drops:staff_detail", drop_id=drop.id)
+        sender = send_drop_closing_reminder
+        label = "One-hour reminder"
+    elif campaign_type == DropEmailCampaign.TYPE_ORDERS_READY:
+        sender = send_drop_orders_ready
+        label = "Ready email"
+    else:
+        messages.error(request, "Unknown email action.")
+        return redirect("drops:staff_detail", drop_id=drop.id)
+    try:
+        campaign, created = sender(drop)
+        if created:
+            messages.success(
+                request,
+                f"{label} sent to {campaign.recipient_count} recipient(s).",
+            )
+        else:
+            messages.info(request, f"{label} was already sent for this Drop.")
+    except Exception:
+        messages.error(
+            request,
+            "The email could not be sent. Check the email configuration and try again.",
+        )
+    return redirect("drops:staff_detail", drop_id=drop.id)
 
 
 @staff_member_required

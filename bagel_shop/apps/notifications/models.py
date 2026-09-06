@@ -107,3 +107,31 @@ class DropAnnouncement(models.Model):
 
     def __str__(self):
         return f"{self.drop} — {self.recipient_count} recipients"
+
+
+class DropEmailCampaign(models.Model):
+    TYPE_CLOSING_SOON = "closing_soon"
+    TYPE_ORDERS_READY = "orders_ready"
+    TYPE_CHOICES = [
+        (TYPE_CLOSING_SOON, "One-hour closing reminder"),
+        (TYPE_ORDERS_READY, "Orders ready"),
+    ]
+
+    drop = models.ForeignKey(
+        "drops.Drop", on_delete=models.CASCADE, related_name="email_campaigns"
+    )
+    campaign_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
+    recipient_count = models.PositiveIntegerField(default=0)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-sent_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["drop", "campaign_type"],
+                name="unique_drop_email_campaign_type",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.drop} — {self.get_campaign_type_display()}"

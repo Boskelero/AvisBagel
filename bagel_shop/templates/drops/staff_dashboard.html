@@ -1,42 +1,49 @@
 {% extends "drops/staff_base.html" %}
-{% load i18n %}
+{% load i18n core_extras %}
 
 {% block title %}{% trans "Drop dashboard" %} | {{ SITE_NAME }}{% endblock %}
 
 {% block staff_content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <div>
-        <h1 class="display-6 fw-bold mb-1">{% trans "Drop dashboard" %}</h1>
-        <p class="text-muted mb-0">{% trans "Capacity and sales at a glance." %}</p>
-    </div>
-    <div class="d-flex gap-2"><a href="{% url 'drops:staff_customers' %}" class="btn btn-outline-dark">{% trans "Customers" %}</a><a href="{% url 'drops:staff_create' %}" class="btn btn-accent">{% trans "Create Drop" %}</a></div>
+<div class="staff-page-heading">
+    <div><span class="staff-eyebrow">{% trans "Operations" %}</span><h1>{% trans "Drop dashboard" %}</h1><p>{% trans "The numbers and Drops that need your attention." %}</p></div>
+    <a href="{% url 'drops:staff_create' %}" class="btn btn-accent btn-lg">{% trans "Create Drop" %}</a>
 </div>
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3"><a href="{% url 'drops:staff_subscribers' %}" class="text-decoration-none text-dark"><div class="bg-white border rounded-4 p-3"><strong class="h3 d-block">{{ subscriber_count }}</strong><span class="text-muted">{% trans "Drop subscribers" %}</span></div></a></div>
-    <div class="col-6 col-md-3"><a href="{% url 'drops:staff_inquiries' %}" class="text-decoration-none text-dark"><div class="bg-white border rounded-4 p-3"><strong class="h3 d-block">{{ new_inquiry_count }}</strong><span class="text-muted">{% trans "New inquiries" %}</span></div></a></div>
+
+<section class="staff-metric-grid mb-5" aria-label="{% trans 'Business totals' %}">
+    <article class="staff-metric-card is-primary"><span>{% trans "Total order value" %}</span><strong>{{ order_value_cents|shekels }}</strong><small>{% trans "Excludes canceled orders" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Orders" %}</span><strong>{{ order_count }}</strong><small>{% trans "Accepted across all Drops" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Bagels sold" %}</span><strong>{{ bagel_count }}</strong><small>{% trans "Lifetime production" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Customers" %}</span><strong>{{ customer_count }}</strong><small>{% trans "Unique email addresses" %}</small></article>
+</section>
+
+<div class="staff-section-heading"><div><h2>{% trans "Current and upcoming Drops" %}</h2><p>{% trans "Live sales, scheduled pickups, and drafts." %}</p></div></div>
+<div class="row g-3 mb-5">
+    {% for drop in current_drops %}
+    <div class="col-md-6 col-xl-4"><article class="staff-drop-card h-100">
+        <div class="staff-drop-card-head"><div><span class="staff-drop-date">{{ drop.pickup_starts_at|date:"M j" }}</span><h3>{{ drop.name }}</h3></div><span class="staff-state is-{{ drop.current_state }}">{{ drop.current_state_label }}</span></div>
+        <p class="staff-drop-meta">{{ drop.pickup_starts_at|date:"l, H:i" }} · {{ drop.pickup_location }}</p>
+        <div class="staff-capacity-row"><div><strong>{{ drop.reserved_bagels }}</strong><span>{% trans "sold" %}</span></div><div><strong>{{ drop.remaining_bagels }}</strong><span>{% trans "left" %}</span></div><div><strong>{{ drop.bagel_capacity }}</strong><span>{% trans "capacity" %}</span></div></div>
+        <a href="{% url 'drops:staff_detail' drop.id %}" class="btn btn-dark w-100">{% trans "Manage Drop" %}</a>
+    </article></div>
+    {% empty %}<div class="col-12"><div class="staff-empty-state"><h3>{% trans "No current Drops" %}</h3><p>{% trans "Create the next Drop when the bake schedule is ready." %}</p></div></div>{% endfor %}
 </div>
-<div class="row g-3">
-    {% for drop in drops %}
-        <div class="col-md-6 col-xl-4">
-            <article class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <h2 class="h5 fw-bold">{{ drop.name }}</h2>
-                        <span class="badge {% if drop.current_state == 'live' %}text-bg-success{% elif drop.current_state == 'sold_out' %}text-bg-danger{% else %}text-bg-dark{% endif %}">{{ drop.current_state_label }}</span>
-                    </div>
-                    <p class="text-muted small">{{ drop.pickup_starts_at|date:"D, M j, H:i" }}</p>
-                    <div class="row text-center g-2 mb-3">
-                        <div class="col-4"><div class="border rounded-3 p-2"><strong class="d-block">{{ drop.bagel_capacity }}</strong><small>{% trans "Capacity" %}</small></div></div>
-                        <div class="col-4"><div class="border rounded-3 p-2"><strong class="d-block">{{ drop.reserved_bagels }}</strong><small>{% trans "Sold" %}</small></div></div>
-                        <div class="col-4"><div class="border rounded-3 p-2"><strong class="d-block">{{ drop.remaining_bagels }}</strong><small>{% trans "Left" %}</small></div></div>
-                    </div>
-                    <div class="d-flex gap-2"><a href="{% url 'drops:staff_detail' drop.id %}" class="btn btn-outline-dark flex-grow-1">{% trans "View production" %}</a><form method="post" action="{% url 'drops:staff_duplicate' drop.id %}">{% csrf_token %}<button class="btn btn-light border" type="submit">{% trans "Duplicate" %}</button></form></div>
-                </div>
-            </article>
-        </div>
-    {% empty %}
-        <p>{% trans "No Drops have been created yet." %}</p>
-    {% endfor %}
+
+<div class="staff-section-heading"><div><h2>{% trans "Previous Drops" %}</h2><p>{% trans "Closed Drops and completed pickups, newest first." %}</p></div></div>
+<div class="staff-history-list">
+    {% for drop in previous_drops %}
+    <a href="{% url 'drops:staff_detail' drop.id %}" class="staff-history-row"><div><strong>{{ drop.name }}</strong><span>{{ drop.pickup_starts_at|date:"M j, Y · H:i" }}</span></div><div class="staff-history-numbers"><span><strong>{{ drop.reserved_bagels }}</strong> {% trans "sold" %}</span><span><strong>{{ drop.bagel_capacity }}</strong> {% trans "capacity" %}</span><span class="staff-state is-{{ drop.current_state }}">{{ drop.current_state_label }}</span></div></a>
+    {% empty %}<div class="staff-empty-state compact"><p>{% trans "Previous Drops will appear here." %}</p></div>{% endfor %}
 </div>
-{% include "drops/includes/pagination.html" with page_obj=drops %}
+{% if previous_drops.has_other_pages %}
+<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3" aria-label="{% trans 'Previous Drops pagination' %}">
+    <span class="small text-muted">{% blocktrans with start=previous_drops.start_index end=previous_drops.end_index total=previous_drops.paginator.count %}Showing {{ start }}–{{ end }} of {{ total }}{% endblocktrans %}</span>
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not previous_drops.has_previous %}disabled{% endif %}">{% if previous_drops.has_previous %}<a class="page-link" href="{% querystring previous_page=previous_drops.previous_page_number %}">{% trans "Previous" %}</a>{% else %}<span class="page-link">{% trans "Previous" %}</span>{% endif %}</li>
+        <li class="page-item disabled"><span class="page-link">{{ previous_drops.number }} / {{ previous_drops.paginator.num_pages }}</span></li>
+        <li class="page-item {% if not previous_drops.has_next %}disabled{% endif %}">{% if previous_drops.has_next %}<a class="page-link" href="{% querystring previous_page=previous_drops.next_page_number %}">{% trans "Next" %}</a>{% else %}<span class="page-link">{% trans "Next" %}</span>{% endif %}</li>
+    </ul>
+</nav>
+{% endif %}
+
+<div class="staff-utility-row mt-5"><a href="{% url 'drops:staff_subscribers' %}"><strong>{{ subscriber_count }}</strong><span>{% trans "active Drop subscribers" %}</span></a><a href="{% url 'drops:staff_inquiries' %}"><strong>{{ new_inquiry_count }}</strong><span>{% trans "new inquiries" %}</span></a></div>
 {% endblock %}
