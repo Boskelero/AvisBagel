@@ -55,7 +55,7 @@
                     {% if entry.product.specialty_upcharge_cents %}
                     <p>{% blocktrans with upcharge=entry.product.specialty_upcharge_cents|shekels %}Includes {{ upcharge }} specialty add-on{% endblocktrans %}</p>
                     {% else %}
-                    <p>{% trans "Classic bagel · eligible for bundle savings" %}</p>
+                    <p>{% if entry.product.description_i18n %}{{ entry.product.description_i18n|truncatechars:45 }}{% else %}{% trans "Hand-rolled and cold-proofed bagel." %}{% endif %}</p>
                     {% endif %}
                     <a class="order-product-detail" href="{% url 'catalog:product_detail' entry.product.slug %}">{% trans "View details" %} <span aria-hidden="true">→</span></a>
                     <div class="order-quantity" role="group" aria-label="{% blocktrans with name=entry.product.name_i18n %}Quantity for {{ name }}{% endblocktrans %}">

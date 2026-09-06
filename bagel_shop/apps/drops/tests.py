@@ -94,6 +94,10 @@ class DropOrderingTests(TestCase):
         self.assertEqual(calculate_bagel_base_price(18), 18500)
 
     def test_order_builder_stays_image_free_and_links_to_product_details(self):
+        self.plain.description_en = (
+            "Hand-rolled and cold-proofed in the New York and Jewish tradition."
+        )
+        self.plain.save(update_fields=["description_en"])
         response = Client().get(reverse("drops:order"))
         self.assertContains(
             response,
@@ -101,6 +105,9 @@ class DropOrderingTests(TestCase):
         )
         self.assertContains(response, "View details", count=2)
         self.assertNotContains(response, "order-product-image")
+        self.assertContains(response, "Hand-rolled and cold-proofed in the New York…")
+        self.assertNotContains(response, "Classic bagel · eligible for bundle savings")
+        self.assertContains(response, "Includes ₪3.00 specialty add-on")
 
     def test_cart_and_checkout_explain_deal_pricing_and_pickup(self):
         client = Client()
