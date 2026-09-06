@@ -108,6 +108,7 @@ function initDropOrderForms() {
         const output = form.querySelector('[data-selected-bagels]');
         const totalOutput = form.querySelector('[data-order-total]');
         const savingsOutput = form.querySelector('[data-order-savings]');
+        const progressOutput = form.querySelector('[data-order-progress]');
         const submit = form.querySelector('[data-order-submit]');
         const max = parseInt(form.dataset.maxBagels || '0', 10);
         const remaining = parseInt(form.dataset.remainingBagels || '0', 10);
@@ -149,6 +150,21 @@ function initDropOrderForms() {
             output.textContent = bagelCount;
             output.closest('strong').classList.toggle('text-danger', invalid && bagelCount > 0);
             totalOutput.textContent = money.format(price / 100);
+            if (progressOutput) {
+                progressOutput.style.width = `${Math.min(100, max ? (bagelCount / max) * 100 : 0)}%`;
+            }
+            bagelInputs.concat(extraInputs).forEach((input) => {
+                const card = input.closest('[data-order-product-card]');
+                if (card) card.classList.toggle('is-selected', quantity(input) > 0);
+                const decrease = card ? card.querySelector('[data-quantity-decrease]') : null;
+                const increase = card ? card.querySelector('[data-quantity-increase]') : null;
+                if (decrease) decrease.disabled = quantity(input) <= 0;
+                if (increase) {
+                    const inputMax = parseInt(input.max || '20', 10);
+                    const bagelLimitReached = input.hasAttribute('data-bagel-quantity') && bagelCount >= Math.min(max, remaining);
+                    increase.disabled = quantity(input) >= inputMax || bagelLimitReached;
+                }
+            });
             if (bagelCount > max) {
                 savingsOutput.textContent = `Maximum ${max} bagels per order`;
                 savingsOutput.classList.add('text-danger');
@@ -161,7 +177,21 @@ function initDropOrderForms() {
             }
             submit.disabled = invalid;
         }
-        bagelInputs.concat(extraInputs).forEach((input) => input.addEventListener('input', update));
+        bagelInputs.concat(extraInputs).forEach((input) => {
+            input.addEventListener('input', update);
+            const card = input.closest('[data-order-product-card]');
+            if (!card) return;
+            card.querySelector('[data-quantity-decrease]')?.addEventListener('click', () => {
+                input.value = Math.max(0, quantity(input) - 1);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            card.querySelector('[data-quantity-increase]')?.addEventListener('click', () => {
+                const inputMax = parseInt(input.max || '20', 10);
+                if (quantity(input) >= inputMax) return;
+                input.value = quantity(input) + 1;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
         update();
     });
 }

@@ -187,7 +187,10 @@ class DropOrderingTests(TestCase):
         client = Client()
         page = client.get(reverse("drops:order"))
         self.assertEqual(page.status_code, 200)
-        self.assertContains(page, "72 bagels remain")
+        self.assertContains(page, "72 bagels")
+        self.assertContains(page, "How deal pricing works")
+        self.assertContains(page, "Save ₪7.00")
+        self.assertContains(page, "₪15.00")
         response = client.post(
             reverse("drops:order"),
             {
@@ -199,6 +202,20 @@ class DropOrderingTests(TestCase):
         cart = client.session["cart"]
         self.assertEqual(cart["drop_id"], self.drop.id)
         self.assertEqual(sum(line["quantity"] for line in cart["lines"]), 6)
+
+    def test_order_builder_preserves_quantities_after_validation_error(self):
+        response = Client().post(
+            reverse("drops:order"),
+            {
+                f"product_{self.plain.id}": 12,
+                f"product_{self.jalapeno.id}": 1,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="12" data-bagel-quantity')
+        self.assertContains(response, 'value="1" data-bagel-quantity')
+        self.assertContains(response, "up to 12 bagels per order")
 
     def test_staff_dashboard_requires_staff_and_can_duplicate_drop(self):
         anonymous = Client()

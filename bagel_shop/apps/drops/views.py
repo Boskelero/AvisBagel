@@ -187,6 +187,8 @@ def order_current_drop(request):
     )
     bagel_entries = [entry for entry in entries if entry.product.counts_toward_bagel_capacity]
     extra_entries = [entry for entry in entries if not entry.product.counts_toward_bagel_capacity]
+    for entry in entries:
+        entry.selected_quantity = 0
     if request.method == "POST":
         selected = []
         bagel_quantity = 0
@@ -195,6 +197,7 @@ def order_current_drop(request):
                 quantity = max(0, int(request.POST.get(f"product_{entry.product_id}", 0)))
             except (TypeError, ValueError):
                 quantity = 0
+            entry.selected_quantity = quantity
             if quantity:
                 selected.append((entry.product, quantity))
                 if entry.product.counts_toward_bagel_capacity:
@@ -217,6 +220,16 @@ def order_current_drop(request):
         .values("quantity", "price_cents")
         .order_by("quantity")
     )
+    single_tier = next((tier for tier in pricing_tiers if tier["quantity"] == 1), None)
+    single_price_cents = single_tier["price_cents"] if single_tier else 0
+    for entry in bagel_entries:
+        entry.display_price_cents = (
+            single_price_cents + entry.product.specialty_upcharge_cents
+        )
+    for tier in pricing_tiers:
+        tier["saving_cents"] = max(
+            0, single_price_cents * tier["quantity"] - tier["price_cents"]
+        )
     return render(request, "drops/order_builder.html", {
         "drop": drop,
         "bagel_entries": bagel_entries,
