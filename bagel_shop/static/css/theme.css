@@ -1913,6 +1913,7 @@ textarea:focus {
 
 .order-product-detail {
     align-self: flex-start;
+    margin-top: auto;
     margin-bottom: 0.8rem;
     padding: 0.32rem 0.58rem;
     border: 1px solid #ddc8b3;
@@ -1948,7 +1949,7 @@ textarea:focus {
 .order-quantity {
     display: grid;
     grid-template-columns: 2.45rem minmax(2.8rem, 1fr) 2.45rem;
-    margin-top: auto;
+    margin-top: 0;
     overflow: hidden;
     background: #f8f2e9;
     border-radius: 0.8rem;
