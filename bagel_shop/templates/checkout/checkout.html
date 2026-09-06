@@ -4,83 +4,35 @@
 {% block title %}{% trans "Checkout" %} | {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
-<section class="mb-4">
-    <h1 class="display-6 fw-bold mb-2">{% trans "Checkout" %}</h1>
-    <p class="text-muted mb-0">{% trans "Complete your details to place the order." %}</p>
-    {% if drop %}
-        <div class="mt-3 p-3 bg-light border rounded-4">
-            <strong>{{ drop.name }}</strong><br>
-            <span class="text-muted">{% trans "Pickup" %}: {{ drop.pickup_starts_at|date:"l, F j, H:i" }}–{{ drop.pickup_ends_at|date:"H:i" }} · {{ drop.pickup_location }}</span>
-        </div>
-    {% endif %}
-</section>
+<div class="checkout-page-heading"><div><span>{% trans "Final step" %}</span><h1>{% trans "Confirm your pickup" %}</h1><p>{% trans "No account needed. Enter your contact details so we can confirm the order." %}</p></div><a href="{% url 'cart:detail' %}" class="btn btn-outline-dark">← {% trans "Back to cart" %}</a></div>
 
-<div class="row g-4">
+{% if drop %}<section class="checkout-pickup-hero mb-4"><div><span>{% trans "Pickup for this Drop" %}</span><h2>{{ drop.pickup_starts_at|date:"l, F j" }}</h2><p>{{ drop.pickup_starts_at|date:"H:i" }}–{{ drop.pickup_ends_at|date:"H:i" }}</p></div><div><span>{% trans "Location" %}</span><strong>{{ drop.pickup_location }}</strong><small>{% trans "Pickup only—delivery is not currently available." %}</small></div></section>{% endif %}
+
+<div class="row g-4 align-items-start">
     <div class="col-lg-7">
-        <form method="post" class="p-4 border rounded-4 bg-white">
-            {% csrf_token %}
-
+        <form method="post" class="checkout-form-card">{% csrf_token %}
+            <div class="checkout-form-heading"><span>1</span><div><h2>{% trans "Your details" %}</h2><p>{% trans "We use these details for confirmation and pickup updates." %}</p></div></div>
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
             <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label" for="id_customer_name">{{ form.customer_name.label }}</label>
-                    {{ form.customer_name }}
-                    {{ form.customer_name.errors }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="id_phone">{{ form.phone.label }}</label>
-                    {{ form.phone }}
-                    {{ form.phone.errors }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="id_email">{{ form.email.label }}</label>
-                    {{ form.email }}
-                    {{ form.email.errors }}
-                </div>
+                <div class="col-md-6"><label class="form-label" for="id_customer_name">{{ form.customer_name.label }}</label>{{ form.customer_name }}{{ form.customer_name.errors }}</div>
+                <div class="col-md-6"><label class="form-label" for="id_phone">{{ form.phone.label }}</label>{{ form.phone }}{{ form.phone.errors }}</div>
+                <div class="col-md-6"><label class="form-label" for="id_email">{{ form.email.label }}</label>{{ form.email }}{{ form.email.errors }}</div>
+                <div class="col-md-6"><label class="form-label" for="id_payment_method">{{ form.payment_method.label }}</label>{{ form.payment_method }}{{ form.payment_method.errors }}</div>
+                <div class="col-12"><label class="form-label" for="id_notes">{{ form.notes.label }}</label>{{ form.notes }}{{ form.notes.errors }}<div class="form-text">{% trans "Optional: allergies, pickup notes, or anything Avi should know." %}</div></div>
             </div>
-
-            <div class="row g-3 mt-3">
-                <div class="col-md-6">
-                    <label class="form-label" for="id_payment_method">{{ form.payment_method.label }}</label>
-                    {{ form.payment_method }}
-                    {{ form.payment_method.errors }}
-                </div>
-                <div class="col-12">
-                    <label class="form-label" for="id_notes">{{ form.notes.label }}</label>
-                    {{ form.notes }}
-                    {{ form.notes.errors }}
-                </div>
-            </div>
-
             <button class="btn btn-accent btn-lg mt-4" type="submit">{% trans "Place order" %}</button>
         </form>
+
+        <section class="pickup-how-card mt-4" aria-labelledby="pickup-how-title"><div class="checkout-form-heading"><span>2</span><div><h2 id="pickup-how-title">{% trans "How pickup works" %}</h2><p>{% trans "Simple, local, and ready during your Drop window." %}</p></div></div><ol><li><strong>{% trans "Check your confirmation" %}</strong><span>{% trans "We email your order number and full pickup details." %}</span></li><li><strong>{% trans "Come during the pickup window" %}</strong><span>{% trans "Head to the location shown above—there is no delivery option." %}</span></li><li><strong>{% trans "Give us your name or order number" %}</strong><span>{% trans "We will hand over your packed order." %}</span></li></ol></section>
     </div>
 
-    <div class="col-lg-5">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h2 class="h5 fw-bold mb-3">{% trans "Order summary" %}</h2>
-                <ul class="list-unstyled">
-                    {% for line in lines %}
-                        <li class="d-flex justify-content-between mb-2">
-                            <span>{{ line.name }} x {{ line.quantity }}</span>
-                            <strong>{{ line.line_total_cents|shekels }}</strong>
-                        </li>
-                    {% endfor %}
-                </ul>
-                {% if discount_cents %}
-                    <div class="d-flex justify-content-between text-success mb-2">
-                        <span>{% trans "Bagel deal savings" %}</span>
-                        <strong>−{{ discount_cents|shekels }}</strong>
-                    </div>
-                {% endif %}
-                <div class="small text-muted mb-2">{% blocktrans with count=bagel_quantity %}{{ count }} bagels in this order{% endblocktrans %}</div>
-                <hr>
-                <div class="d-flex justify-content-between">
-                    <span>{% trans "Total" %}</span>
-                    <strong>{{ estimated_total_cents|shekels }}</strong>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="col-lg-5"><aside class="checkout-summary-card">
+        <span class="cart-summary-kicker">{% trans "Order summary" %}</span><h2>{% blocktrans with count=bagel_quantity %}{{ count }} bagels{% endblocktrans %}</h2>
+        <ul>{% for line in lines %}<li><span>{{ line.name }} × {{ line.quantity }}</span><strong>{{ line.line_total_cents|shekels }}</strong></li>{% endfor %}</ul>
+        <div class="cart-price-row"><span>{% trans "Items at single prices" %}</span><strong>{{ subtotal_cents|shekels }}</strong></div>
+        {% if discount_cents %}<div class="cart-price-row is-saving"><span>{% trans "Automatic deal savings" %}</span><strong>−{{ discount_cents|shekels }}</strong></div>{% endif %}
+        <div class="cart-price-total"><span>{% trans "Total" %}</span><strong>{{ estimated_total_cents|shekels }}</strong></div>
+        <details class="checkout-discount-note"><summary>{% trans "How was my discount calculated?" %}</summary><p>{% trans "The system combines ₪65 six-bagel deals, ₪120 twelve-bagel deals, and ₪12 single bagels to find the lowest price. Specialty upcharges are then added per bagel." %}</p></details>
+    </aside></div>
 </div>
 {% endblock %}

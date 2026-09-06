@@ -1,26 +1,18 @@
 {% load i18n core_extras %}
-<div class="card border-0 shadow-sm">
-    <div class="card-body">
-        <div class="d-flex justify-content-between mb-2">
-            <span>{% trans "Subtotal" %}</span>
-            <strong>{{ subtotal_cents|shekels }}</strong>
-        </div>
-        <div class="d-flex justify-content-between mb-3">
-            <span>{% trans "Estimated total" %}</span>
-            <strong>{{ estimated_total_cents|shekels }}</strong>
-        </div>
-        {% if discount_cents %}
-            <div class="d-flex justify-content-between text-success mb-3">
-                <span>{% trans "Bagel deal savings" %}</span>
-                <strong>−{{ discount_cents|shekels }}</strong>
-            </div>
-        {% endif %}
-        {% if drop %}<p class="small text-muted">{{ drop.name }} · {{ bagel_quantity }}/{{ drop.max_bagels_per_order }} {% trans "bagels" %}</p>{% endif %}
-        {% if has_unavailable_items %}<p class="small text-danger">{% trans "Remove unavailable items before checkout." %}</p>{% endif %}
-        {% if lines and not drop_is_open %}<p class="small text-danger">{% trans "This Drop is not accepting orders." %}</p>{% endif %}
-        {% if lines and not has_bagels %}<p class="small text-danger">{% trans "Add at least one bagel before checkout." %}</p>{% endif %}
-        {% if exceeds_order_cap %}<p class="small text-danger">{% blocktrans with cap=drop.max_bagels_per_order %}This Drop allows a maximum of {{ cap }} bagels per order.{% endblocktrans %}</p>{% endif %}
-        {% if exceeds_remaining_capacity %}<p class="small text-danger">{% blocktrans with remaining=drop.remaining_bagels %}Only {{ remaining }} bagels remain. Please reduce your order.{% endblocktrans %}</p>{% endif %}
-        <a href="{% url 'checkout:checkout' %}" class="btn btn-accent w-100 {% if not can_checkout %}disabled{% endif %}" {% if not can_checkout %}aria-disabled="true" tabindex="-1"{% endif %}>{% trans "Proceed to checkout" %}</a>
-    </div>
-</div>
+<section class="cart-summary-card">
+    <span class="cart-summary-kicker">{% trans "Order summary" %}</span>
+    <h2>{% if drop %}{{ drop.name }}{% else %}{% trans "Your total" %}{% endif %}</h2>
+    {% if lines %}
+    <div class="cart-summary-count"><strong>{{ bagel_quantity }}</strong><span>{% trans "bagels selected" %}{% if drop %} · {% blocktrans with cap=drop.max_bagels_per_order %}maximum {{ cap }}{% endblocktrans %}{% endif %}</span></div>
+    <div class="cart-price-row"><span>{% trans "Items at single prices" %}</span><strong>{{ subtotal_cents|shekels }}</strong></div>
+    {% if discount_cents %}<div class="cart-price-row is-saving"><span>{% trans "Bagel deal savings" %}</span><strong>−{{ discount_cents|shekels }}</strong></div>{% endif %}
+    <div class="cart-price-total"><span>{% trans "Estimated total" %}</span><strong>{{ estimated_total_cents|shekels }}</strong></div>
+    {% if has_unavailable_items %}<p class="cart-summary-error">{% trans "Remove unavailable items before checkout." %}</p>{% endif %}
+    {% if lines and not drop_is_open %}<p class="cart-summary-error">{% trans "This Drop is not accepting orders." %}</p>{% endif %}
+    {% if lines and not has_bagels %}<p class="cart-summary-error">{% trans "Add at least one bagel before checkout." %}</p>{% endif %}
+    {% if exceeds_order_cap %}<p class="cart-summary-error">{% blocktrans with cap=drop.max_bagels_per_order %}This Drop allows a maximum of {{ cap }} bagels per order.{% endblocktrans %}</p>{% endif %}
+    {% if exceeds_remaining_capacity %}<p class="cart-summary-error">{% blocktrans with remaining=drop.remaining_bagels %}Only {{ remaining }} bagels remain. Please reduce your order.{% endblocktrans %}</p>{% endif %}
+    <a href="{% url 'checkout:checkout' %}" class="btn btn-accent btn-lg w-100 {% if not can_checkout %}disabled{% endif %}" {% if not can_checkout %}aria-disabled="true" tabindex="-1"{% endif %}>{% trans "Continue to checkout" %}</a>
+    <small class="cart-summary-note">{% trans "Pickup only. Your bagels are reserved when the order is completed." %}</small>
+    {% endif %}
+</section>

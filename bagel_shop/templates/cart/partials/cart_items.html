@@ -1,66 +1,19 @@
 {% load i18n core_extras %}
 {% if lines %}
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>{% trans "Item" %}</th>
-                    <th class="text-center" style="width: 160px;">{% trans "Quantity" %}</th>
-                    <th class="text-end">{% trans "Total" %}</th>
-                    <th class="text-end"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for line in lines %}
-                    <tr>
-                        <td>
-                            <div class="fw-semibold">{{ line.name }}</div>
-                            {% if line.type == 'bundle' %}
-                                <ul class="list-unstyled small text-muted mb-0 mt-1">
-                                    {% for selection in line.bundle_snapshot.selections %}
-                                        <li>{{ selection.name }} x {{ selection.quantity }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                            <div class="small text-muted">{{ line.unit_price_cents|shekels }}</div>
-                        </td>
-                        <td>
-                            <form method="post"
-                                  action="{% url 'cart:update_quantity' line.key %}"
-                                  hx-post="{% url 'cart:update_quantity' line.key %}"
-                                  hx-target="#cart-live-region"
-                                  hx-swap="innerHTML">
-                                {% csrf_token %}
-                                <input
-                                    class="form-control text-center"
-                                    type="number"
-                                    min="0"
-                                    max="50"
-                                    name="quantity"
-                                    value="{{ line.quantity }}"
-                                    onchange="this.form.requestSubmit();"
-                                >
-                            </form>
-                        </td>
-                        <td class="text-end fw-semibold">{{ line.line_total_cents|shekels }}</td>
-                        <td class="text-end">
-                            <form method="post"
-                                  action="{% url 'cart:remove_item' line.key %}"
-                                  hx-post="{% url 'cart:remove_item' line.key %}"
-                                  hx-target="#cart-live-region"
-                                  hx-swap="innerHTML">
-                                {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-secondary" type="submit">{% trans "Remove" %}</button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="cart-items-heading"><h2>{% trans "Your items" %}</h2><span>{% blocktrans with count=item_count %}{{ count }} items{% endblocktrans %}</span></div>
+    <div class="cart-line-list">
+    {% for line in lines %}
+        <article class="cart-line">
+            <div class="cart-line-mark" aria-hidden="true"><span></span></div>
+            <div class="cart-line-info"><h3>{{ line.name }}</h3>{% if line.type == 'bundle' %}<ul>{% for selection in line.bundle_snapshot.selections %}<li>{{ selection.name }} × {{ selection.quantity }}</li>{% endfor %}</ul>{% else %}<span>{{ line.unit_price_cents|shekels }} {% trans "each" %}</span>{% endif %}</div>
+            <form method="post" action="{% url 'cart:update_quantity' line.key %}" hx-post="{% url 'cart:update_quantity' line.key %}" hx-target="#cart-live-region" hx-swap="innerHTML" class="cart-line-quantity">
+                {% csrf_token %}<label for="cart-quantity-{{ forloop.counter }}">{% trans "Quantity" %}</label><input id="cart-quantity-{{ forloop.counter }}" class="form-control" type="number" min="0" max="50" name="quantity" value="{{ line.quantity }}" onchange="this.form.requestSubmit();">
+            </form>
+            <div class="cart-line-total"><span>{% trans "Line total" %}</span><strong>{{ line.line_total_cents|shekels }}</strong></div>
+            <form method="post" action="{% url 'cart:remove_item' line.key %}" hx-post="{% url 'cart:remove_item' line.key %}" hx-target="#cart-live-region" hx-swap="innerHTML">{% csrf_token %}<button class="cart-remove-button" type="submit" aria-label="{% blocktrans with name=line.name %}Remove {{ name }}{% endblocktrans %}">×</button></form>
+        </article>
+    {% endfor %}
     </div>
 {% else %}
-    <div class="text-center py-5">
-        <p class="text-muted mb-3">{% trans "Your cart is currently empty." %}</p>
-        <a href="{% url 'catalog:menu' %}" class="btn btn-accent">{% trans "Go to menu" %}</a>
-    </div>
+    <div class="cart-empty"><div class="cart-empty-mark" aria-hidden="true"><span></span></div><h2>{% trans "Your cart is empty" %}</h2><p>{% trans "Choose your bagels from the current Drop and they will appear here." %}</p><a href="{% url 'drops:order' %}" class="btn btn-accent">{% trans "Choose bagels" %}</a></div>
 {% endif %}

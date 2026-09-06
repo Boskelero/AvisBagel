@@ -91,6 +91,27 @@ class DropOrderingTests(TestCase):
         self.assertEqual(calculate_bagel_base_price(12), 12000)
         self.assertEqual(calculate_bagel_base_price(18), 18500)
 
+    def test_cart_and_checkout_explain_deal_pricing_and_pickup(self):
+        client = Client()
+        self._add(client, self.plain, 6)
+
+        cart = client.get(reverse("cart:detail"))
+        self.assertContains(cart, "Automatic deal pricing")
+        self.assertContains(cart, "Six bagels cost ₪65")
+        self.assertContains(cart, "Pickup")
+        self.assertContains(cart, "Bagel deal savings")
+
+        checkout = client.get(reverse("checkout:checkout"))
+        self.assertContains(checkout, "How pickup works")
+        self.assertContains(checkout, "How was my discount calculated?")
+        self.assertContains(checkout, "Pickup only")
+
+    def test_empty_cart_uses_friendly_full_width_state(self):
+        response = Client().get(reverse("cart:detail"))
+        self.assertContains(response, "Your cart is empty")
+        self.assertContains(response, 'class="col-12"', html=False)
+        self.assertNotContains(response, "Order summary")
+
     def test_six_pack_adds_only_specialty_upcharge(self):
         client = Client()
         self._add(client, self.plain, 5)
