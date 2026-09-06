@@ -153,6 +153,10 @@ The bucket remains private; public product and blog images are streamed through
 stable `/media/...` application URLs so links do not expire after a redeploy.
 In `dev` mode, media is stored locally under `bagel_shop/media/`.
 
+The staff blog editor is pinned to CKEditor `43.3.1`, the final release line
+before mandatory license-key configuration. Inline images are uploaded to the
+same Railway bucket through the authenticated staff endpoint.
+
 ## Core Flows Implemented
 
 - Browse products (`/he/menu/` or `/en/menu/`)

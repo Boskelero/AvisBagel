@@ -2,7 +2,6 @@
     const form = document.getElementById('staff-blog-form');
     if (!form || !window.CKEDITOR) return;
 
-    const licenseKey = form.dataset.licenseKey;
     const uploadUrl = form.dataset.uploadUrl;
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
     const {
@@ -14,7 +13,6 @@
 
     document.querySelectorAll('.js-rich-editor').forEach((element) => {
         ClassicEditor.create(element, {
-            licenseKey,
             plugins: [
                 Alignment, Autoformat, BlockQuote, Bold, Essentials, Heading, Image,
                 ImageCaption, ImageResize, ImageStyle, ImageToolbar, ImageUpload,

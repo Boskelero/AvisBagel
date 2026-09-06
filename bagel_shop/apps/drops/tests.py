@@ -480,16 +480,16 @@ class DropOrderingTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("drops:staff_login"), response.url)
 
-    @override_settings(CKEDITOR_LICENSE_KEY="test-license-key")
-    def test_blog_form_loads_configured_ckeditor(self):
+    def test_blog_form_loads_pinned_ckeditor(self):
         staff = get_user_model().objects.create_user(username="rich-editor", is_staff=True)
         client = Client()
         client.force_login(staff)
 
         response = client.get(reverse("drops:staff_blog_post_create"))
 
-        self.assertContains(response, "ckeditor5.umd.js")
-        self.assertContains(response, 'data-license-key="test-license-key"')
+        self.assertContains(response, "/ckeditor5/43.3.1/ckeditor5.umd.js")
+        self.assertContains(response, "staff-blog-editor.js")
+        self.assertNotContains(response, "needs a CKEditor license key")
 
     def test_staff_can_update_bagel_deal_prices(self):
         staff = get_user_model().objects.create_user(username="pricing-owner", is_staff=True)

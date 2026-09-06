@@ -131,5 +131,4 @@ SITE_ADDRESS = config("SITE_ADDRESS", default="Ben Yehuda 69, Tel Aviv")
 SITE_URL = config("SITE_URL", default="http://127.0.0.1:8000")
 
 MAX_IMAGE_UPLOAD_BYTES = config("MAX_IMAGE_UPLOAD_BYTES", default=8 * 1024 * 1024, cast=int)
-CKEDITOR_LICENSE_KEY = config("CKEDITOR_LICENSE_KEY", default="")
-CKEDITOR_VERSION = config("CKEDITOR_VERSION", default="48.5.0")
+CKEDITOR_VERSION = config("CKEDITOR_VERSION", default="43.3.1")

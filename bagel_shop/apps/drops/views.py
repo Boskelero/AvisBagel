@@ -327,7 +327,6 @@ def staff_blog_post_create(request):
         return redirect("drops:staff_blog_posts")
     return render(request, "drops/staff_blog_post_form.html", {
         "form": form, "title": "Add blog post",
-        "ckeditor_license_key": settings.CKEDITOR_LICENSE_KEY,
         "ckeditor_version": settings.CKEDITOR_VERSION,
     })
 
@@ -343,7 +342,6 @@ def staff_blog_post_edit(request, post_id):
         return redirect("drops:staff_blog_posts")
     return render(request, "drops/staff_blog_post_form.html", {
         "form": form, "post": post, "title": f"Edit {post}",
-        "ckeditor_license_key": settings.CKEDITOR_LICENSE_KEY,
         "ckeditor_version": settings.CKEDITOR_VERSION,
     })
 

@@ -4,10 +4,8 @@
 {% block title %}{{ title }} | {{ SITE_NAME }}{% endblock %}
 
 {% block extra_head %}
-{% if ckeditor_license_key %}
 <link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/{{ ckeditor_version }}/ckeditor5.css">
 <script src="https://cdn.ckeditor.com/ckeditor5/{{ ckeditor_version }}/ckeditor5.umd.js"></script>
-{% endif %}
 {% endblock %}
 
 {% block staff_content %}
@@ -16,11 +14,7 @@
     <a href="{% url 'drops:staff_blog_posts' %}" class="btn btn-outline-dark">{% trans "All blog posts" %}</a>
 </div>
 
-{% if not ckeditor_license_key %}
-<div class="alert alert-warning">The rich-text editor is ready but needs a CKEditor license key. The regular article fields remain available.</div>
-{% endif %}
-
-<form method="post" enctype="multipart/form-data" class="bg-white border rounded-4 p-4" id="staff-blog-form" data-license-key="{{ ckeditor_license_key }}" data-upload-url="{% url 'drops:staff_blog_image_upload' %}">
+<form method="post" enctype="multipart/form-data" class="bg-white border rounded-4 p-4" id="staff-blog-form" data-upload-url="{% url 'drops:staff_blog_image_upload' %}">
     {% csrf_token %}
     {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
     <div class="row g-3 mb-4">
@@ -52,8 +46,6 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if ckeditor_license_key %}
 {% load static %}
 <script src="{% static 'js/staff-blog-editor.js' %}"></script>
-{% endif %}
 {% endblock %}
