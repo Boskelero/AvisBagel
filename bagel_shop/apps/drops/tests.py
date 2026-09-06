@@ -16,6 +16,8 @@ from bagel_shop.apps.catalog.models import Category, Product
 from bagel_shop.apps.blog.models import Post
 from bagel_shop.apps.orders.models import Order
 from bagel_shop.apps.notifications.models import (
+    CateringInquiry,
+    ContactInquiry,
     DropAlert,
     DropAnnouncement,
     DropEmailCampaign,
@@ -292,6 +294,49 @@ class DropOrderingTests(TestCase):
         self.assertContains(dashboard, "Total order value")
         self.assertContains(dashboard, "Previous Drops")
         self.assertNotContains(dashboard, "Duplicate")
+
+    def test_staff_inquiry_inbox_filters_and_prepares_email_replies(self):
+        staff = get_user_model().objects.create_user(
+            username="inbox-staff", password="test-password", is_staff=True
+        )
+        contact = ContactInquiry.objects.create(
+            name="Maya Customer",
+            email="maya@example.com",
+            topic=ContactInquiry.TOPIC_PICKUP,
+            message="Where should I collect my order?",
+        )
+        CateringInquiry.objects.create(
+            name="Noam Events",
+            email="noam@example.com",
+            phone="0500000000",
+            estimated_bagels=80,
+            message="We are planning an office event.",
+        )
+        client = Client()
+        client.force_login(staff)
+
+        inbox = client.get(reverse("drops:staff_inquiries"))
+        self.assertContains(inbox, "Inquiry inbox")
+        self.assertContains(inbox, "Needs a reply")
+        self.assertContains(inbox, "Potential bagels")
+        self.assertContains(inbox, "Open in email app", count=2)
+
+        filtered = client.get(
+            reverse("drops:staff_inquiries"),
+            {"q": "Maya", "kind": "customer", "status": "new"},
+        )
+        self.assertContains(filtered, "Maya Customer")
+        self.assertNotContains(filtered, "Noam Events")
+        self.assertContains(filtered, "Clear filters")
+
+        return_path = reverse("drops:staff_inquiries") + "?kind=customer&status=new"
+        update = client.post(
+            reverse("drops:staff_contact_inquiry_status", args=[contact.id]),
+            {"status": ContactInquiry.STATUS_REPLIED, "next": return_path},
+        )
+        self.assertRedirects(update, return_path, fetch_redirect_response=False)
+        contact.refresh_from_db()
+        self.assertEqual(contact.status, ContactInquiry.STATUS_REPLIED)
 
     def test_previous_drops_have_their_own_paginator(self):
         for index in range(7):

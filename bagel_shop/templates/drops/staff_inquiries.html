@@ -1,18 +1,75 @@
 {% extends "drops/staff_base.html" %}
 {% load i18n %}
+
 {% block title %}{% trans "Inquiries" %} | {{ SITE_NAME }}{% endblock %}
+
 {% block staff_content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4"><div><h1 class="display-6 fw-bold mb-1">{% trans "Inquiries" %}</h1><p class="text-muted mb-0">{% trans "Customer questions and large-order requests are kept separate." %}</p></div><a href="{% url 'drops:staff_inquiries_excel' %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a></div>
+<div class="staff-page-heading compact">
+    <div><span class="staff-eyebrow">{% trans "Audience" %}</span><h1>{% trans "Inquiry inbox" %}</h1><p>{% trans "Handle customer questions and catering opportunities in one place." %}</p></div>
+    <a href="{% url 'drops:staff_inquiries_excel' %}" class="btn btn-outline-dark">{% trans "Download Excel" %}</a>
+</div>
 
-<section class="mb-5">
-    <div class="d-flex align-items-center gap-2 mb-3"><h2 class="h4 fw-bold mb-0">{% trans "Customer messages" %}</h2><span class="badge text-bg-light border">{{ contact_page.paginator.count }}</span></div>
-    {% for inquiry in contact_inquiries %}<article class="bg-white border rounded-4 p-4 mb-3"><div class="row g-3"><div class="col-lg-8"><div class="d-flex flex-wrap gap-2 align-items-center"><h3 class="h5 fw-bold mb-0">{{ inquiry.name }}</h3><span class="badge text-bg-dark">{{ inquiry.get_status_display }}</span><span class="badge text-bg-light border">{{ inquiry.get_topic_display }}</span></div><p class="small text-muted mt-2 mb-2">{{ inquiry.created_at|date:"M j, Y H:i" }} · {{ inquiry.email }}{% if inquiry.phone %} · {{ inquiry.phone }}{% endif %}</p>{% if inquiry.order_number %}<p class="mb-2"><strong>{% trans "Order" %}:</strong> {{ inquiry.order_number }}</p>{% endif %}<p class="mb-0">{{ inquiry.message|linebreaksbr }}</p></div><div class="col-lg-4"><form method="post" action="{% url 'drops:staff_contact_inquiry_status' inquiry.id %}" class="d-flex gap-2">{% csrf_token %}<select class="form-select" name="status">{% for value,label in inquiry.STATUS_CHOICES %}<option value="{{ value }}" {% if inquiry.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn btn-outline-dark">{% trans "Save" %}</button></form></div></div></article>{% empty %}<div class="bg-white border rounded-4 p-4 text-muted">{% trans "No customer messages yet." %}</div>{% endfor %}
-    {% if contact_page.has_other_pages %}<nav class="d-flex justify-content-end mt-3" aria-label="{% trans 'Customer message pages' %}"><ul class="pagination pagination-sm mb-0"><li class="page-item {% if not contact_page.has_previous %}disabled{% endif %}">{% if contact_page.has_previous %}<a class="page-link" href="{% querystring contact_page=contact_page.previous_page_number %}">{% trans "Previous" %}</a>{% else %}<span class="page-link">{% trans "Previous" %}</span>{% endif %}</li><li class="page-item disabled"><span class="page-link">{{ contact_page.number }} / {{ contact_page.paginator.num_pages }}</span></li><li class="page-item {% if not contact_page.has_next %}disabled{% endif %}">{% if contact_page.has_next %}<a class="page-link" href="{% querystring contact_page=contact_page.next_page_number %}">{% trans "Next" %}</a>{% else %}<span class="page-link">{% trans "Next" %}</span>{% endif %}</li></ul></nav>{% endif %}
+<section class="staff-metric-grid mb-4">
+    <article class="staff-metric-card is-primary"><span>{% trans "Needs a reply" %}</span><strong>{{ new_count }}</strong><small>{% trans "New across both inboxes" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Customer messages" %}</span><strong>{{ contact_count }}</strong><small>{% trans "Questions and feedback" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Catering leads" %}</span><strong>{{ catering_count }}</strong><small>{% trans "Large-order opportunities" %}</small></article>
+    <article class="staff-metric-card"><span>{% trans "Potential bagels" %}</span><strong>{{ active_catering_bagels }}</strong><small>{% trans "From open catering requests" %}</small></article>
 </section>
 
-<section>
-    <div class="d-flex align-items-center gap-2 mb-3"><h2 class="h4 fw-bold mb-0">{% trans "Catering and large orders" %}</h2><span class="badge text-bg-light border">{{ catering_page.paginator.count }}</span></div>
-    {% for inquiry in catering_inquiries %}<article class="bg-white border rounded-4 p-4 mb-3"><div class="row g-3"><div class="col-lg-8"><div class="d-flex gap-2 align-items-center"><h3 class="h5 fw-bold mb-0">{{ inquiry.name }}</h3><span class="badge text-bg-dark">{{ inquiry.get_status_display }}</span></div><p class="small text-muted mt-2 mb-2">{{ inquiry.created_at|date:"M j, Y H:i" }} · {{ inquiry.email }} · {{ inquiry.phone }}</p><p class="mb-2"><strong>{% trans "Event" %}:</strong> {{ inquiry.event_date|default:"Not specified" }} · <strong>{% trans "Bagels" %}:</strong> {{ inquiry.estimated_bagels|default:"Not specified" }}</p><p class="mb-0">{{ inquiry.message|linebreaksbr }}</p></div><div class="col-lg-4"><form method="post" action="{% url 'drops:staff_inquiry_status' inquiry.id %}" class="d-flex gap-2">{% csrf_token %}<select class="form-select" name="status">{% for value,label in inquiry.STATUS_CHOICES %}<option value="{{ value }}" {% if inquiry.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn btn-outline-dark">{% trans "Save" %}</button></form></div></div></article>{% empty %}<div class="bg-white border rounded-4 p-4 text-muted">{% trans "No catering inquiries yet." %}</div>{% endfor %}
-    {% if catering_page.has_other_pages %}<nav class="d-flex justify-content-end mt-3" aria-label="{% trans 'Catering inquiry pages' %}"><ul class="pagination pagination-sm mb-0"><li class="page-item {% if not catering_page.has_previous %}disabled{% endif %}">{% if catering_page.has_previous %}<a class="page-link" href="{% querystring catering_page=catering_page.previous_page_number %}">{% trans "Previous" %}</a>{% else %}<span class="page-link">{% trans "Previous" %}</span>{% endif %}</li><li class="page-item disabled"><span class="page-link">{{ catering_page.number }} / {{ catering_page.paginator.num_pages }}</span></li><li class="page-item {% if not catering_page.has_next %}disabled{% endif %}">{% if catering_page.has_next %}<a class="page-link" href="{% querystring catering_page=catering_page.next_page_number %}">{% trans "Next" %}</a>{% else %}<span class="page-link">{% trans "Next" %}</span>{% endif %}</li></ul></nav>{% endif %}
+<form method="get" class="staff-inquiry-filters mb-4">
+    <div><label for="inquiry-search">{% trans "Search" %}</label><input id="inquiry-search" class="form-control" type="search" name="q" value="{{ query }}" placeholder="{% trans 'Name, email, phone, order, or message' %}"></div>
+    <div><label for="inquiry-kind">{% trans "Inbox" %}</label><select id="inquiry-kind" class="form-select" name="kind"><option value="all" {% if selected_kind == 'all' %}selected{% endif %}>{% trans "All inquiries" %}</option><option value="customer" {% if selected_kind == 'customer' %}selected{% endif %}>{% trans "Customer messages" %}</option><option value="catering" {% if selected_kind == 'catering' %}selected{% endif %}>{% trans "Catering" %}</option></select></div>
+    <div><label for="inquiry-status">{% trans "Status" %}</label><select id="inquiry-status" class="form-select" name="status"><option value="" {% if not selected_status %}selected{% endif %}>{% trans "All statuses" %}</option><option value="new" {% if selected_status == 'new' %}selected{% endif %}>{% trans "New" %}</option><option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>{% trans "Replied / contacted" %}</option><option value="closed" {% if selected_status == 'closed' %}selected{% endif %}>{% trans "Closed" %}</option></select></div>
+    <button class="btn btn-dark" type="submit">{% trans "Apply" %}</button>
+</form>
+{% if query or selected_status or selected_kind != 'all' %}<a class="staff-clear-filters" href="{% url 'drops:staff_inquiries' %}">{% trans "Clear filters" %}</a>{% endif %}
+
+{% if selected_kind == 'all' or selected_kind == 'customer' %}
+<section class="staff-inbox-section mb-5">
+    <div class="staff-section-heading"><div><h2>{% trans "Customer messages" %}</h2><p>{% trans "Questions about orders, pickup, products, and feedback." %}</p></div><span class="staff-inbox-count">{{ contact_page.paginator.count }}</span></div>
+    <div class="staff-inquiry-list">
+    {% for inquiry in contact_inquiries %}
+        <article class="staff-inquiry-card {% if inquiry.status == 'new' %}is-unread{% endif %}">
+            <div class="staff-inquiry-avatar" aria-hidden="true">{{ inquiry.name|slice:":1"|upper }}</div>
+            <div class="staff-inquiry-body">
+                <div class="staff-inquiry-title"><div><h3>{{ inquiry.name }}</h3><span>{{ inquiry.created_at|date:"M j, Y · H:i" }}</span></div><div class="d-flex flex-wrap gap-2"><span class="staff-inquiry-kind">{{ inquiry.get_topic_display }}</span><span class="staff-inquiry-status is-{{ inquiry.status }}">{{ inquiry.get_status_display }}</span></div></div>
+                <div class="staff-inquiry-contact"><a href="mailto:{{ inquiry.email }}">{{ inquiry.email }}</a>{% if inquiry.phone %}<a href="tel:{{ inquiry.phone }}">{{ inquiry.phone }}</a>{% endif %}{% if inquiry.order_number %}<span>{% trans "Order" %} {{ inquiry.order_number }}</span>{% endif %}</div>
+                <p class="staff-inquiry-message">{{ inquiry.message|linebreaksbr }}</p>
+                <details class="staff-reply-panel">
+                    <summary>{% trans "Reply" %}</summary>
+                    <div class="staff-reply-content"><div><span class="staff-control-label">{% trans "Suggested reply" %}</span><p>Hi {{ inquiry.name }},<br><br>Thanks for reaching out to Abu Avi Bagels.</p></div><div class="staff-reply-actions"><a class="btn btn-dark" href="mailto:{{ inquiry.email|urlencode }}?subject=Re%3A%20your%20Abu%20Avi%20Bagels%20message&body=Hi%20{{ inquiry.name|urlencode }}%2C%0D%0A%0D%0AThanks%20for%20reaching%20out%20to%20Abu%20Avi%20Bagels.%0D%0A%0D%0A">{% trans "Open in email app" %}</a><small>{% trans "Direct sending from this page will be enabled after outbound email is connected." %}</small></div></div>
+                </details>
+            </div>
+            <form method="post" action="{% url 'drops:staff_contact_inquiry_status' inquiry.id %}" class="staff-inquiry-status-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><label for="contact-status-{{ inquiry.id }}">{% trans "Status" %}</label><select id="contact-status-{{ inquiry.id }}" class="form-select form-select-sm" name="status">{% for value,label in inquiry.STATUS_CHOICES %}<option value="{{ value }}" {% if inquiry.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn btn-sm btn-outline-dark" type="submit">{% trans "Save" %}</button></form>
+        </article>
+    {% empty %}<div class="staff-empty-state"><h3>{% trans "No customer messages found" %}</h3><p>{% trans "Try clearing the current filters." %}</p></div>{% endfor %}
+    </div>
+    {% if contact_page.has_other_pages %}<nav class="staff-inbox-pagination" aria-label="{% trans 'Customer message pages' %}"><a class="btn btn-sm btn-outline-dark {% if not contact_page.has_previous %}disabled{% endif %}" {% if contact_page.has_previous %}href="{% querystring contact_page=contact_page.previous_page_number %}"{% endif %}>{% trans "Previous" %}</a><span>{{ contact_page.number }} / {{ contact_page.paginator.num_pages }}</span><a class="btn btn-sm btn-outline-dark {% if not contact_page.has_next %}disabled{% endif %}" {% if contact_page.has_next %}href="{% querystring contact_page=contact_page.next_page_number %}"{% endif %}>{% trans "Next" %}</a></nav>{% endif %}
 </section>
+{% endif %}
+
+{% if selected_kind == 'all' or selected_kind == 'catering' %}
+<section class="staff-inbox-section">
+    <div class="staff-section-heading"><div><h2>{% trans "Catering and large orders" %}</h2><p>{% trans "Events, office orders, parties, and simchas." %}</p></div><span class="staff-inbox-count">{{ catering_page.paginator.count }}</span></div>
+    <div class="staff-inquiry-list">
+    {% for inquiry in catering_inquiries %}
+        <article class="staff-inquiry-card {% if inquiry.status == 'new' %}is-unread{% endif %}">
+            <div class="staff-inquiry-avatar is-catering" aria-hidden="true">{{ inquiry.name|slice:":1"|upper }}</div>
+            <div class="staff-inquiry-body">
+                <div class="staff-inquiry-title"><div><h3>{{ inquiry.name }}</h3><span>{{ inquiry.created_at|date:"M j, Y · H:i" }}</span></div><span class="staff-inquiry-status is-{{ inquiry.status }}">{{ inquiry.get_status_display }}</span></div>
+                <div class="staff-inquiry-contact"><a href="mailto:{{ inquiry.email }}">{{ inquiry.email }}</a><a href="tel:{{ inquiry.phone }}">{{ inquiry.phone }}</a></div>
+                <div class="staff-catering-facts"><div><span>{% trans "Event date" %}</span><strong>{{ inquiry.event_date|date:"M j, Y"|default:"Not specified" }}</strong></div><div><span>{% trans "Estimated bagels" %}</span><strong>{{ inquiry.estimated_bagels|default:"Not specified" }}</strong></div></div>
+                <p class="staff-inquiry-message">{{ inquiry.message|linebreaksbr }}</p>
+                <details class="staff-reply-panel">
+                    <summary>{% trans "Reply" %}</summary>
+                    <div class="staff-reply-content"><div><span class="staff-control-label">{% trans "Suggested reply" %}</span><p>Hi {{ inquiry.name }},<br><br>Thank you for considering Abu Avi Bagels for your event. I would be happy to discuss the details with you.</p></div><div class="staff-reply-actions"><a class="btn btn-dark" href="mailto:{{ inquiry.email|urlencode }}?subject=Your%20Abu%20Avi%20Bagels%20catering%20inquiry&body=Hi%20{{ inquiry.name|urlencode }}%2C%0D%0A%0D%0AThank%20you%20for%20considering%20Abu%20Avi%20Bagels%20for%20your%20event.%20I%20would%20be%20happy%20to%20discuss%20the%20details%20with%20you.%0D%0A%0D%0A">{% trans "Open in email app" %}</a><small>{% trans "Direct sending from this page will be enabled after outbound email is connected." %}</small></div></div>
+                </details>
+            </div>
+            <form method="post" action="{% url 'drops:staff_inquiry_status' inquiry.id %}" class="staff-inquiry-status-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><label for="catering-status-{{ inquiry.id }}">{% trans "Status" %}</label><select id="catering-status-{{ inquiry.id }}" class="form-select form-select-sm" name="status">{% for value,label in inquiry.STATUS_CHOICES %}<option value="{{ value }}" {% if inquiry.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn btn-sm btn-outline-dark" type="submit">{% trans "Save" %}</button></form>
+        </article>
+    {% empty %}<div class="staff-empty-state"><h3>{% trans "No catering inquiries found" %}</h3><p>{% trans "Try clearing the current filters." %}</p></div>{% endfor %}
+    </div>
+    {% if catering_page.has_other_pages %}<nav class="staff-inbox-pagination" aria-label="{% trans 'Catering inquiry pages' %}"><a class="btn btn-sm btn-outline-dark {% if not catering_page.has_previous %}disabled{% endif %}" {% if catering_page.has_previous %}href="{% querystring catering_page=catering_page.previous_page_number %}"{% endif %}>{% trans "Previous" %}</a><span>{{ catering_page.number }} / {{ catering_page.paginator.num_pages }}</span><a class="btn btn-sm btn-outline-dark {% if not catering_page.has_next %}disabled{% endif %}" {% if catering_page.has_next %}href="{% querystring catering_page=catering_page.next_page_number %}"{% endif %}>{% trans "Next" %}</a></nav>{% endif %}
+</section>
+{% endif %}
 {% endblock %}

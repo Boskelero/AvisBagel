@@ -522,17 +522,66 @@ def staff_seo(request):
 
 @staff_member_required
 def staff_inquiries(request):
+    query = request.GET.get("q", "").strip()
+    selected_status = request.GET.get("status", "").strip()
+    selected_kind = request.GET.get("kind", "all").strip()
+    if selected_kind not in {"all", "customer", "catering"}:
+        selected_kind = "all"
+
+    contact_queryset = ContactInquiry.objects.all()
+    catering_queryset = CateringInquiry.objects.all()
+    if query:
+        contact_queryset = contact_queryset.filter(
+            Q(name__icontains=query)
+            | Q(email__icontains=query)
+            | Q(phone__icontains=query)
+            | Q(order_number__icontains=query)
+            | Q(message__icontains=query)
+        )
+        catering_queryset = catering_queryset.filter(
+            Q(name__icontains=query)
+            | Q(email__icontains=query)
+            | Q(phone__icontains=query)
+            | Q(message__icontains=query)
+        )
+    if selected_status == "new":
+        contact_queryset = contact_queryset.filter(status=ContactInquiry.STATUS_NEW)
+        catering_queryset = catering_queryset.filter(status=CateringInquiry.STATUS_NEW)
+    elif selected_status == "in_progress":
+        contact_queryset = contact_queryset.filter(status=ContactInquiry.STATUS_REPLIED)
+        catering_queryset = catering_queryset.filter(status=CateringInquiry.STATUS_CONTACTED)
+    elif selected_status == "closed":
+        contact_queryset = contact_queryset.filter(status=ContactInquiry.STATUS_CLOSED)
+        catering_queryset = catering_queryset.filter(status=CateringInquiry.STATUS_CLOSED)
+    else:
+        selected_status = ""
+
     contact_page = _paginate(
-        request, ContactInquiry.objects.all(), per_page=10, page_param="contact_page"
+        request, contact_queryset, per_page=8, page_param="contact_page"
     )
     catering_page = _paginate(
-        request, CateringInquiry.objects.all(), per_page=10, page_param="catering_page"
+        request, catering_queryset, per_page=8, page_param="catering_page"
+    )
+    active_catering_bagels = (
+        CateringInquiry.objects.exclude(status=CateringInquiry.STATUS_CLOSED)
+        .aggregate(total=Sum("estimated_bagels"))["total"]
+        or 0
     )
     return render(request, "drops/staff_inquiries.html", {
         "contact_inquiries": contact_page,
         "catering_inquiries": catering_page,
         "contact_page": contact_page,
         "catering_page": catering_page,
+        "query": query,
+        "selected_status": selected_status,
+        "selected_kind": selected_kind,
+        "new_count": (
+            ContactInquiry.objects.filter(status=ContactInquiry.STATUS_NEW).count()
+            + CateringInquiry.objects.filter(status=CateringInquiry.STATUS_NEW).count()
+        ),
+        "contact_count": ContactInquiry.objects.count(),
+        "catering_count": CateringInquiry.objects.count(),
+        "active_catering_bagels": active_catering_bagels,
     })
 
 
@@ -545,6 +594,11 @@ def staff_contact_inquiry_status(request, inquiry_id):
         inquiry.status = status
         inquiry.save(update_fields=["status"])
         messages.success(request, "Customer message updated.")
+    next_url = request.POST.get("next", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
     return redirect("drops:staff_inquiries")
 
 
@@ -557,6 +611,11 @@ def staff_inquiry_status(request, inquiry_id):
         inquiry.status = status
         inquiry.save(update_fields=["status"])
         messages.success(request, "Inquiry updated.")
+    next_url = request.POST.get("next", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
     return redirect("drops:staff_inquiries")
 
 
