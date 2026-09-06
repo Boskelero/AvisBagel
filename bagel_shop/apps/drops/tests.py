@@ -97,7 +97,11 @@ class DropOrderingTests(TestCase):
         self.plain.description_en = (
             "Hand-rolled and cold-proofed in the New York and Jewish tradition."
         )
+        self.jalapeno.description_en = (
+            "Cheddar dough with jalapeño for a savory and gently spicy finish."
+        )
         self.plain.save(update_fields=["description_en"])
+        self.jalapeno.save(update_fields=["description_en"])
         response = Client().get(reverse("drops:order"))
         self.assertContains(
             response,
@@ -106,6 +110,7 @@ class DropOrderingTests(TestCase):
         self.assertContains(response, "View details", count=2)
         self.assertNotContains(response, "order-product-image")
         self.assertContains(response, "Hand-rolled and cold-proofed in the New York…")
+        self.assertContains(response, "Cheddar dough with jalapeño for a savory and…")
         self.assertNotContains(response, "Classic bagel · eligible for bundle savings")
         self.assertContains(response, "Includes ₪3.00 specialty add-on")
 

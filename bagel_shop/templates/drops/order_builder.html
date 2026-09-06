@@ -52,11 +52,8 @@
                         <h3>{{ entry.product.name_i18n }}</h3>
                         <strong class="order-product-price">{{ entry.display_price_cents|shekels }}</strong>
                     </div>
-                    {% if entry.product.specialty_upcharge_cents %}
-                    <p>{% blocktrans with upcharge=entry.product.specialty_upcharge_cents|shekels %}Includes {{ upcharge }} specialty add-on{% endblocktrans %}</p>
-                    {% else %}
-                    <p>{% if entry.product.description_i18n %}{{ entry.product.description_i18n|truncatechars:45 }}{% else %}{% trans "Hand-rolled and cold-proofed bagel." %}{% endif %}</p>
-                    {% endif %}
+                    <p class="order-product-description">{% if entry.product.description_i18n %}{{ entry.product.description_i18n|truncatechars:45 }}{% else %}{% trans "Hand-rolled and cold-proofed bagel." %}{% endif %}</p>
+                    {% if entry.product.specialty_upcharge_cents %}<p class="order-product-upcharge">{% blocktrans with upcharge=entry.product.specialty_upcharge_cents|shekels %}Includes {{ upcharge }} specialty add-on{% endblocktrans %}</p>{% endif %}
                     <a class="order-product-detail" href="{% url 'catalog:product_detail' entry.product.slug %}">{% trans "View details" %} <span aria-hidden="true">→</span></a>
                     <div class="order-quantity" role="group" aria-label="{% blocktrans with name=entry.product.name_i18n %}Quantity for {{ name }}{% endblocktrans %}">
                         <button type="button" data-quantity-decrease aria-label="{% trans 'Decrease quantity' %}">−</button>

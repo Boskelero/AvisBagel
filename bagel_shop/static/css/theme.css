@@ -1904,6 +1904,13 @@ textarea:focus {
     line-height: 1.35;
 }
 
+.order-product-info .order-product-upcharge {
+    margin: -0.25rem 0 0.55rem;
+    color: #a65420;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
 .order-product-detail {
     align-self: flex-start;
     margin-bottom: 0.8rem;
