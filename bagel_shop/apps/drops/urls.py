@@ -6,6 +6,8 @@ app_name = "drops"
 
 urlpatterns = [
     path("order/", views.order_current_drop, name="order"),
+    path("staff/login/", views.staff_login, name="staff_login"),
+    path("staff/logout/", views.staff_logout, name="staff_logout"),
     path("staff/", views.staff_dashboard, name="staff_dashboard"),
     path("staff/orders/", views.staff_orders, name="staff_orders"),
     path("staff/orders.xlsx", views.staff_orders_excel, name="staff_orders_excel"),

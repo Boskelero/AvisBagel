@@ -5,7 +5,7 @@
 <nav class="staff-topbar border-bottom bg-dark text-white">
     <div class="container py-3 d-flex justify-content-between align-items-center">
         <a href="{% url 'drops:staff_dashboard' %}" class="text-white text-decoration-none fw-bold">ABU AVI <span class="fw-normal text-white-50">STAFF</span></a>
-        <div class="d-flex gap-2 align-items-center"><a href="{% url 'pages:home' %}" class="btn btn-sm btn-outline-light">{% trans "View store" %}</a><form method="post" action="{% url 'admin:logout' %}">{% csrf_token %}<button class="btn btn-sm btn-light" type="submit">{% trans "Log out" %}</button></form></div>
+        <div class="d-flex gap-2 align-items-center"><a href="{% url 'pages:home' %}" class="btn btn-sm btn-outline-light">{% trans "View store" %}</a><form method="post" action="{% url 'drops:staff_logout' %}">{% csrf_token %}<button class="btn btn-sm btn-light" type="submit">{% trans "Log out" %}</button></form></div>
     </div>
 </nav>
 {% endblock %}

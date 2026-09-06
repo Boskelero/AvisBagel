@@ -1,7 +1,10 @@
 import csv
 from datetime import timedelta
+from functools import partial
 
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.admin.views.decorators import staff_member_required as admin_staff_member_required
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -11,6 +14,7 @@ from django.http import HttpResponse
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bagel_shop.apps.catalog.models import Category, Product
@@ -37,6 +41,53 @@ from .forms import (
 from .exports import workbook_response
 from .models import BagelPriceTier, Drop, DropProduct
 from .services import get_current_drop
+
+
+staff_member_required = partial(
+    admin_staff_member_required,
+    login_url="drops:staff_login",
+)
+
+
+@require_http_methods(["GET", "POST"])
+def staff_login(request):
+    next_url = request.POST.get("next") or request.GET.get("next", "")
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect("drops:staff_dashboard")
+
+    form = AuthenticationForm(request=request, data=request.POST or None)
+    form.fields["username"].widget.attrs.update(
+        {"class": "form-control", "autocomplete": "username", "autofocus": True}
+    )
+    form.fields["password"].widget.attrs.update(
+        {"class": "form-control", "autocomplete": "current-password"}
+    )
+    if request.method == "POST" and form.is_valid():
+        user = form.get_user()
+        if not user.is_staff:
+            form.add_error(None, "This account does not have staff access.")
+        else:
+            auth_login(request, user)
+            if next_url and url_has_allowed_host_and_scheme(
+                next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                return redirect(next_url)
+            return redirect("drops:staff_dashboard")
+
+    return render(
+        request,
+        "drops/staff_login.html",
+        {"form": form, "next": next_url},
+    )
+
+
+@require_POST
+def staff_logout(request):
+    auth_logout(request)
+    messages.success(request, "You have been logged out securely.")
+    return redirect("drops:staff_login")
 
 
 def _production_totals(drop):

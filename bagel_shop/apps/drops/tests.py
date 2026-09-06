@@ -201,6 +201,7 @@ class DropOrderingTests(TestCase):
         anonymous = Client()
         response = anonymous.get(reverse("drops:staff_dashboard"))
         self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("drops:staff_login"), response.url)
 
         staff = get_user_model().objects.create_user(
             username="avi", password="test-password", is_staff=True
@@ -238,6 +239,42 @@ class DropOrderingTests(TestCase):
         self.assertEqual(duplicate.status, Drop.STATUS_DRAFT)
         self.assertEqual(duplicate.product_entries.count(), 2)
         self.assertEqual(duplicate.opens_at, self.drop.opens_at + timedelta(days=7))
+
+    def test_branded_staff_login_accepts_staff_and_rejects_customers(self):
+        staff = get_user_model().objects.create_user(
+            username="avi-login", password="test-password", is_staff=True
+        )
+        customer = get_user_model().objects.create_user(
+            username="customer-login", password="test-password"
+        )
+        client = Client()
+
+        page = client.get(reverse("drops:staff_login"))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "Good to see you, Avi.")
+
+        rejected = client.post(
+            reverse("drops:staff_login"),
+            {"username": customer.username, "password": "test-password"},
+        )
+        self.assertEqual(rejected.status_code, 200)
+        self.assertContains(rejected, "does not have staff access")
+        self.assertNotIn("_auth_user_id", client.session)
+
+        destination = reverse("drops:staff_orders")
+        signed_in = client.post(
+            reverse("drops:staff_login"),
+            {
+                "username": staff.username,
+                "password": "test-password",
+                "next": destination,
+            },
+        )
+        self.assertRedirects(signed_in, destination)
+
+        signed_out = client.post(reverse("drops:staff_logout"))
+        self.assertRedirects(signed_out, reverse("drops:staff_login"))
+        self.assertNotIn("_auth_user_id", client.session)
 
     def test_staff_can_delete_an_empty_draft_drop(self):
         draft = Drop.objects.create(
